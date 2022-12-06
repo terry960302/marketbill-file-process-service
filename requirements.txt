@@ -24,3 +24,5 @@ rsa==4.9
 s3transfer==0.6.0
 six==1.16.0
 urllib3==1.26.13
+
+jsonpickle~=3.0.0
