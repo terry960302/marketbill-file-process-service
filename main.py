@@ -1,37 +1,31 @@
+import json
 import os
 import logging
 from jsonpickle import encode
 import boto3
+from handler.root_handler import health_check
+from handler.process_handler import process_file
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# client = boto3.client('lambda')
-# client.get_account_settings()
-
-# def lambda_handler(event, context):
-#     if event['httpMethod'] == 'GET':
-#         return {
-#             'statusCode': 200,
-#             'body': jsonpickle.encode(event['queryStringParameters'])
-#         }
-#     if event['httpMethod'] == 'POST':
-#         req_data = jsonpickle.encode(event['body']) # JSON 문자열 처리
-#         return {
-#             'statusCode': 200,
-#             'body': jsonpickle.encode(req_data)
-#         }
-#     logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
-#     # logger.info('## EVENT\r' + jsonpickle.encode(event))
-#     # logger.info('## CONTEXT\r' + jsonpickle.encode(context))
-#     # response = client.get_account_settings()
-#     # return response['AccountUsage']
+client = boto3.client('lambda')
+client.get_account_settings()
 
 
-def main():
-    env = encode(dict(**os.environ))
-    print(env)
+def lambda_handler(event, context):
+    logger.info('## EVENT\r' + json.dumps(event))
+    logger.info('## CONTEXT\r' + json.dumps(context))
+    logger.info('## ENVIRONMENT VARIABLES\r' + json.dumps(dict(**os.environ)))
 
-if __name__ == "__main__":
-    print("@@@@@@@@ hello world@@@@@@@")
-    main()
+    if event['httpMethod'] == 'GET':
+        return health_check()
+    elif event['httpMethod'] == 'POST':
+        data = dict(event["data"])
+        return process_file(data)
+    else:
+        return {
+            "statusCode": 403,
+            "message": "Unsupported http method",
+            "body": None,
+        }

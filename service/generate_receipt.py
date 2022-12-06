@@ -198,7 +198,7 @@ def process_receipt_data(data, file_name):
         "https://www.googleapis.com/auth/drive",
     ]
 
-    json_key_path = "./credential/eloquent-branch-369106-1e961c642259.json"  # JSON Key File Path
+    json_key_path = "../credential/eloquent-branch-369106-1e961c642259.json"  # JSON Key File Path
 
     credential = ServiceAccountCredentials.from_json_keyfile_name(json_key_path, scope)
 
