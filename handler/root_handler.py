@@ -1,10 +1,15 @@
+import json
 import os
+from model import gateway_response
 
 
 def health_check():
     env = dict(**os.environ)
     profile = str(env["PROFILE"])
-    return {
-        'statusCode': 200,
-        'body': print("[%s] Marketbill file process service is running...", profile)
-    }
+
+    res = gateway_response.GatewayResponse(
+        statusCode=200,
+        body={"health": "[%s] Marketbill file process service is running...".format(profile)}
+    )
+
+    return json.dumps(res)
