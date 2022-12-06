@@ -1,6 +1,6 @@
 *.ipynb
 __pycache__
-*.json
+#*.json
 .venv
 .ipynb_checkpoints
 venv
