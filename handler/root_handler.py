@@ -8,8 +8,7 @@ def health_check():
     env = dict(**os.environ)
     profile = str(env["PROFILE"])
 
-    res = r.GatewayResponse(
+    return r.GatewayResponse(
         statusCode=200,
         body={"health": "[%s] Marketbill file process service is running...".format(profile)}
-    )
-    return res.to_dict()
+    ).to_dict()
