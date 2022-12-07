@@ -13,7 +13,6 @@ def lambda_handler(event, context):
     method = "httpMethod"
 
     logger.info('## EVENT\r' + json.dumps(event))
-    logger.info('## CONTEXT\r' + json.dumps(context))
     logger.info('## ENVIRONMENT VARIABLES\r' + json.dumps(dict(**os.environ)))
 
     if event[method] == 'GET':
