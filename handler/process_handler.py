@@ -4,9 +4,18 @@ from service.receipt_service import ReceiptService
 from model import receipt_process_input as dto, gateway_response as r
 
 
-def process_file(json_dict):
+def process_file(req_body):
     file_name = "sample_name"
     try:
+        json_dict = {}
+        if req_body is None:
+            return r.GatewayResponse(
+                statusCode=403,
+                message="Unsupported format of request body for processing receipt."
+            )
+        else:
+            json_dict = dict(req_body)
+
         service = ReceiptService()
         json_input = dto.ReceiptProcessInput(**json_dict)
         service.process_receipt_data(json_input, file_name)

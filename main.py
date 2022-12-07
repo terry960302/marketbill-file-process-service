@@ -20,14 +20,7 @@ def lambda_handler(event, context):
         return health_check()
     elif event[method] == 'POST':
         body = event["body"]
-        if body is None:
-            return r.GatewayResponse(
-                statusCode=403,
-                message="Malformed request body for processing receipt."
-            )
-        else:
-            json_dict = dict(body)
-        return process_file(json_dict)
+        return process_file(body)
     else:
         return r.GatewayResponse(
             statusCode=403,
