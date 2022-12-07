@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:slim-buster
+FROM public.ecr.aws/docker/library/python:3.9
 MAINTAINER Taewan Kim "terry960302@gmail.com"
 
 COPY . /app
