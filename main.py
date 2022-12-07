@@ -19,10 +19,55 @@ def lambda_handler(event, context):
     if event[method] == 'GET':
         return health_check()
     elif event[method] == 'POST':
-        json_dict = dict(event["data"])
+        body = event["body"]
+        if body is None:
+            return r.GatewayResponse(
+                statusCode=403,
+                message="Malformed request body for processing receipt."
+            )
+        else:
+            json_dict = dict(body)
         return process_file(json_dict)
     else:
         return r.GatewayResponse(
             statusCode=403,
             message="Unsupported http method"
         )
+
+""" event JSON
+{
+    "resource": "/",
+    "path": "/",
+    "httpMethod": "GET",
+    "requestContext": {
+        "resourcePath": "/",
+        "httpMethod": "GET",
+        "path": "/Prod/",
+        ...
+    },
+    "headers": {
+        "accept": "text/html",
+        "accept-encoding": "gzip, deflate, br",
+        "Host": "xxx.us-east-2.amazonaws.com",
+        "User-Agent": "Mozilla/5.0",
+        ...
+    },
+    "multiValueHeaders": {
+        "accept": [
+            "text/html"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br"
+        ],
+        ...
+    },
+    "queryStringParameters": {
+        "postcode": 12345
+        },
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "body": null,
+    "isBase64Encoded": false
+}
+"""
