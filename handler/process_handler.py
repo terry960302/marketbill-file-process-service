@@ -23,7 +23,7 @@ def process_file(req_body):
         return r.GatewayResponse(
             statusCode=200,
             body=r.ReceiptOutput(
-                file_name="asd",
+                file_name=file_name,
                 file_path="asd",
                 file_format=".pdf",
                 metadata=""
