@@ -26,7 +26,8 @@ def lambda_handler(event, context):
             message="Unsupported http method"
         )
 
-""" event JSON
+
+""" API gateway event JSON
 {
     "resource": "/",
     "path": "/",

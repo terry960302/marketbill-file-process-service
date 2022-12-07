@@ -5,7 +5,7 @@ from dataclasses import dataclass, field, asdict
 @dataclass
 class GatewayResponse:
     statusCode: int
-    message: str
+    message: str = field(default_factory=str)
     body: dict = field(default_factory=dict)
 
     def __post_init__(self):
