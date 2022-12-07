@@ -16,5 +16,5 @@ ENV DB_HOST=marketbill-db.ciegftzvpg1l.ap-northeast-2.rds.amazonaws.com
 ENV DB_PORT=5432
 ENV DB_NAME=prod-db
 
-CMD ["python3", "main.py"]
+CMD ["main.handler_handler"]
 

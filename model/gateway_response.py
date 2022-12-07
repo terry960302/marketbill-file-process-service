@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+import json
+from dataclasses import dataclass, field, asdict
 
 
 @dataclass
@@ -10,3 +11,6 @@ class GatewayResponse:
     def __post_init__(self):
         if self.body is None:
             self.body = {}
+
+    def to_dict(self):
+        return asdict(self)

@@ -4,7 +4,7 @@ MAINTAINER Taewan Kim "terry960302@gmail.com"
 COPY . /app
 WORKDIR /app
 
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 # profile
 ENV PROFILE=dev
@@ -16,4 +16,4 @@ ENV DB_HOST=marketbill-db.ciegftzvpg1l.ap-northeast-2.rds.amazonaws.com
 ENV DB_PORT=5432
 ENV DB_NAME=dev-db
 
-CMD ["python3", "main.py"]
+CMD ["main.handler_handler"]
