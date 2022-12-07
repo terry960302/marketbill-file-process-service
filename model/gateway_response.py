@@ -5,12 +5,26 @@ from dataclasses import dataclass, field, asdict
 @dataclass
 class GatewayResponse:
     statusCode: int
-    message: str = field(default_factory=str)
-    body: dict = field(default_factory=dict)
-
-    def __post_init__(self):
-        if self.body is None:
-            self.body = {}
+    body: str = field(default_factory=str)
 
     def to_dict(self):
         return asdict(self)
+
+
+@dataclass
+class ErrorBody:
+    message: str = field(default_factory=str)
+
+    def to_str(self) -> str:
+        return json.dumps(asdict(self))
+
+
+@dataclass
+class ReceiptOutput:
+    file_name: str = field(default_factory=str)
+    file_path: str = field(default_factory=str)
+    file_format: str = field(default_factory=str)
+    metadata: str = field(default_factory=str)
+
+    def to_str(self) -> str:
+        return json.dumps(asdict(self))

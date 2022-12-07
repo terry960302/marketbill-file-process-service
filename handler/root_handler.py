@@ -10,5 +10,5 @@ def health_check():
 
     return r.GatewayResponse(
         statusCode=200,
-        body={"health": "[%s] Marketbill file process service is running...".format(profile)}
+        body=json.dumps({"health": "[%s] Marketbill file process service is running...".format(profile)})
     ).to_dict()

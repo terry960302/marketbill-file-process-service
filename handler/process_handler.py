@@ -11,7 +11,7 @@ def process_file(req_body):
         if req_body is None:
             return r.GatewayResponse(
                 statusCode=403,
-                message="Unsupported format of request body for processing receipt."
+                body=r.ErrorBody(message="Unsupported format of request body for processing receipt.").to_str()
             ).to_dict()
         else:
             json_dict = dict(req_body)
@@ -22,15 +22,15 @@ def process_file(req_body):
 
         return r.GatewayResponse(
             statusCode=200,
-            body={
-                "file_name": file_name,
-                "file_path": "",
-                "file_format": "pdf",
-                "metadata": ""
-            }).to_dict()
+            body=r.ReceiptOutput(
+                file_name="asd",
+                file_path="asd",
+                file_format=".pdf",
+                metadata=""
+            ).to_str()).to_dict()
 
     except Exception as e:
         return r.GatewayResponse(
             statusCode=500,
-            message=json.dumps(e),
+            body=r.ErrorBody(message=json.dumps(e)).to_str()
         ).to_dict()

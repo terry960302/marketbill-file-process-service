@@ -23,7 +23,7 @@ def lambda_handler(event, context):
     else:
         return r.GatewayResponse(
             statusCode=403,
-            message="Unsupported http method"
+            body=r.ErrorBody(message="Unsupported http method").to_str()
         )
 
 
