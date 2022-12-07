@@ -1,17 +1,12 @@
 import json
 import os
 import logging
-import boto3
 from handler.root_handler import health_check
 from handler.process_handler import process_file
-from model import receipt_process_input as dto, gateway_response as r
-from pprint import pprint
+from model import gateway_response as r
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-client = boto3.client('lambda')
-client.get_account_settings()
 
 
 def lambda_handler(event, context):

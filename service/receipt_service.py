@@ -8,15 +8,11 @@ import os
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 from gspread.cell import Cell
-import pandas as pd
-import json
 import requests
 from math import ceil
 from model import receipt_process_input as dto
 from typing import List
-from dataclasses import asdict
 from gspread import Client, Spreadsheet, Worksheet
-import time
 
 
 class ReceiptService:
