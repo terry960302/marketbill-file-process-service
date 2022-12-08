@@ -47,13 +47,15 @@ class ReceiptService:
         self.__google_client: Client = gc
 
         self.file_name = file_name
-        self.local_file_path: str = ReceiptService.LOCAL_STORAGE_PATH + file_name + ReceiptService.EXPORT_FILE_FORMAT
+        self.local_file_path: str = ReceiptService.LOCAL_STORAGE_PATH + \
+            file_name + ReceiptService.EXPORT_FILE_FORMAT
         self.receipt_form_file_name = receipt_form_file_name
 
         self.order_no = data.orderNo
         self.retailer_name = data.retailer.name
         self.wholesaler_name = data.wholesaler.name
-        self.order_items: List[dto.OrderItem] = self._filter_not_null(data.orderItems)
+        self.order_items: List[dto.OrderItem] = self._filter_not_null(
+            data.orderItems)
         return
 
     def process_receipt_data(self) -> ReceiptProcessOutput:
@@ -96,16 +98,11 @@ class ReceiptService:
     """
 
     def _create_formatted_spreadsheet(self) -> Spreadsheet:
-        doc: Spreadsheet = self.__google_client.open(self.receipt_form_file_name)
-
-        # 권한을 새로줘야해요 ~~ floway.wholesale 계정 내에. 
-        # service 계정에 생성된 파일이고, 이를 공유해야 하는 개념
-
-        new_spreadsheet = self.__google_client.copy(doc.id, title=self.file_name)
-        new_spreadsheet.share(ReceiptService.GOOGLE_SPREAD_SHEET_ACCOUNT, perm_type='user', role='writer')
-
-        doc = self.__google_client.open(self.file_name)
-        return doc
+        doc: Spreadsheet = self.__google_client.open(
+            self.receipt_form_file_name)
+        new_spreadsheet = self.__google_client.copy(
+            doc.id, title=self.file_name)
+        return new_spreadsheet
 
     def _create_sheet_cells(self, d: dto.OrderItem, num: int, cells):
         flower_name = d.flower.name
@@ -135,7 +132,8 @@ class ReceiptService:
     """
 
     def _generate_new_sheet(self, idx: int, sheet, name: str):
-        new_sheet = sheet.duplicate(insert_sheet_index=idx, new_sheet_name=name)
+        new_sheet = sheet.duplicate(
+            insert_sheet_index=idx, new_sheet_name=name)
         new_sheet = new_sheet.batch_clear(['A11:K23'])
         return new_sheet
 
@@ -145,13 +143,15 @@ class ReceiptService:
         retail_name = Cell(2, 7, self.retailer_name)
         issue_date = Cell(8, 1, ReceiptService.get_today())
 
-        calc_prices = list(map(lambda item: item.price * item.quantity, self.order_items))
+        calc_prices = list(map(lambda item: item.price *
+                           item.quantity, self.order_items))
         tot_price = sum(calc_prices)
 
         top_tot_price = Cell(8, 4, tot_price)
         bottom_tot_price = Cell(24, 11, tot_price)
 
-        sheet.update_cells([order_id, retail_name, issue_date, top_tot_price, bottom_tot_price])
+        sheet.update_cells(
+            [order_id, retail_name, issue_date, top_tot_price, bottom_tot_price])
         return
 
     @staticmethod
@@ -163,7 +163,8 @@ class ReceiptService:
 
     def _export_pdf(self, doc):
         url = 'https://docs.google.com/spreadsheets/export?format=pdf&size=statement&gridlines=false&scale=3&horizontal_alignment=CENTER&vertical_alignment=CENTER&id=' + doc.id
-        headers = {'Authorization': 'Bearer ' + self.__credential.create_delegated("").get_access_token().access_token}
+        headers = {'Authorization': 'Bearer ' +
+                   self.__credential.create_delegated("").get_access_token().access_token}
         res = requests.get(url, headers=headers)
 
         with open(self.local_file_path, 'wb') as f:
@@ -197,7 +198,8 @@ class ReceiptService:
 
     def _update_all_contents_to_sheet(self, doc: Spreadsheet):
         max_row = 13
-        receipt_num = ceil(len(self.order_items) / max_row)  # max_row 개수보다 많으면 영수증을 분리함.
+        # max_row 개수보다 많으면 영수증을 분리함.
+        receipt_num = ceil(len(self.order_items) / max_row)
 
         default_sheet_name = "Sheet1"
         sheet: Worksheet = doc.worksheet(default_sheet_name)
@@ -223,7 +225,8 @@ class ReceiptService:
             elif n > 0:
 
                 name = f'Sheet{str(n + 1)}'
-                self._generate_new_sheet(n, sheet, name)  # 장(paper)이 다르므로 다른 sheet 으로 분리
+                # 장(paper)이 다르므로 다른 sheet 으로 분리
+                self._generate_new_sheet(n, sheet, name)
 
                 new_sheet: Worksheet = doc.worksheet(name)
 
