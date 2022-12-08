@@ -2,31 +2,28 @@ import json
 
 from service.receipt_service import ReceiptService
 from model import receipt_process_input as dto, gateway_response as r
+from datastore.datastore import Datastore
 
 
-def process_file(req_body):
-    file_name = "sample_name"
+def handle_receipt_process(req_body):
     try:
-        json_dict = {}
-        if req_body is None:
-            return r.GatewayResponse(
-                statusCode=403,
-                body=r.ErrorBody(message="Unsupported format of request body for processing receipt.").to_str()
-            ).to_dict()
-        else:
-            json_dict = dict(req_body)
+        db = Datastore()
+        db.set_postgres()
 
-        service = ReceiptService()
+        json_dict = dict(req_body)
+
+        receipt_form_name = 'receipt_001'
         json_input = dto.ReceiptProcessInput(**json_dict)
-        service.process_receipt_data(json_input, file_name)
+        service = ReceiptService(json_input, receipt_form_name)
+        output = service.process_receipt_data()
 
         return r.GatewayResponse(
             statusCode=200,
             body=r.ReceiptOutput(
-                file_name=file_name,
-                file_path="asd",
-                file_format=".pdf",
-                metadata=""
+                file_name=output.file_name,
+                file_path=output.file_path,
+                file_format=output.file_format,
+                metadata=output.metadata
             ).to_str()).to_dict()
 
     except Exception as e:

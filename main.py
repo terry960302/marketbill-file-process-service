@@ -2,7 +2,7 @@ import json
 import os
 import logging
 from handler.root_handler import health_check
-from handler.process_handler import process_file
+from handler.process_handler import handle_receipt_process
 from model import gateway_response as r
 
 logger = logging.getLogger()
@@ -19,7 +19,7 @@ def lambda_handler(event, context):
         return health_check()
     elif event[method] == 'POST':
         body = event["body"]
-        return process_file(body)
+        return handle_receipt_process(body)
     else:
         return r.GatewayResponse(
             statusCode=403,

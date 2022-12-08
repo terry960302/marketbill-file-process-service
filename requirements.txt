@@ -26,3 +26,5 @@ six==1.16.0
 urllib3==1.26.13
 
 jsonpickle~=3.0.0
+peewee~=3.15.4
+pdfminer~=20191125
