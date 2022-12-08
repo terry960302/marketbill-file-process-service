@@ -20,6 +20,12 @@ import time
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 import shutil
+import jpype
+import asposecells
+
+jpype.startJVM()
+import asposecells.api as aspose
+from PyPDF2 import PdfWriter, PdfReader, PdfMerger
 
 
 class ReceiptService:
@@ -39,8 +45,7 @@ class ReceiptService:
 
     def __init__(self, data: dto.ReceiptProcessInput, receipt_form_file_name: str):
         # 인증 설정하기
-        credential = ServiceAccountCredentials.from_json_keyfile_name(ReceiptService.JSON_KEY_PATH,
-                                                                      ReceiptService.SCOPE)
+        # credential = ServiceAccountCredentials.from_json_keyfile_name(ReceiptService.JSON_KEY_PATH,ReceiptService.SCOPE)
         # googel api 실행 client
         # gc: Client = gspread.authorize(credential)
         #
@@ -289,6 +294,34 @@ class ReceiptService:
     #
     #     print('finish exporting pdf')
 
+    def export_as_pdf(self, excel_file_path: str):
+        size_to_reduce = 20
+        pdf_file_path = ReceiptService.LOCAL_STORAGE_PATH + self.file_name + ReceiptService.EXPORT_FILE_FORMAT
+
+        workbook = aspose.Workbook(excel_file_path)
+        saveOptions = aspose.PdfSaveOptions()
+        saveOptions.setOnePagePerSheet(True)
+        workbook.save(pdf_file_path, saveOptions)
+        jpype.shutdownJVM()
+
+        reader = PdfReader(pdf_file_path)
+        writer = PdfWriter()
+
+        for page in reader.pages:
+            width, height = page.cropbox.upper_right
+            page.cropbox.upperLeft = (0, height - size_to_reduce)
+            page.cropbox.upperRight = (width, height - size_to_reduce)
+            page.cropbox.lowerRight = (width, size_to_reduce)
+            page.cropbox.lowerLeft = (0, size_to_reduce)
+            writer.addPage(page)
+
+        with open(pdf_file_path, 'wb') as fp:
+            writer.write(fp)
+
+        if os.path.isfile(excel_file_path):
+            os.remove(excel_file_path)
+        return
+
     def _upload_receipt_to_s3(self) -> str:  # f = 파일명
         profile = self._get_profile()
         object_name = f'{ReceiptService.REMOTE_STORAGE_DIR}/{profile}/{self.file_name}{ReceiptService.EXPORT_FILE_FORMAT}'
@@ -362,7 +395,7 @@ if __name__ == "__main__":
     print("init")
     start_time = time.time()
     json_object = {
-        "orderNo": "20221205M1230918",
+        "orderNo": "20221209M1230918",
         "retailer": {
             "name": "꽃소매"
         },
@@ -753,6 +786,8 @@ if __name__ == "__main__":
     receipt_service = ReceiptService(json_input, receipt_form_name)
 
     excel_file_path, wb = receipt_service.process_receipt_data_to_excel()
+    receipt_service.export_as_pdf(excel_file_path)
+    output = receipt_service.process_receipt_data()
+    print(output.to_dict())
 
-    # print(output.to_dict())
     print("--- %s seconds ---" % (time.time() - start_time))
