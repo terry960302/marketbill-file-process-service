@@ -15,7 +15,7 @@ def handle_receipt_process(req_body):
         receipt_form_name = 'receipt_001'
         json_input = dto.ReceiptProcessInput(**json_dict)
         service = ReceiptService(json_input, receipt_form_name)
-        output = service.process_receipt_data()
+        output = service.process_receipt_from_local()
 
         return r.GatewayResponse(
             statusCode=200,
