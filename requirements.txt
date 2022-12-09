@@ -28,7 +28,4 @@ urllib3==1.26.13
 peewee~=3.15.4
 pdfminer~=20191125
 openpyxl~=3.0.10
-
-xlsx2html~=0.4.0
-fpdf~=1.7.2
-pdfplumber~=0.7.6
+pypdf2~=2.11.2

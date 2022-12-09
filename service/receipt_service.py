@@ -23,7 +23,6 @@ from openpyxl.worksheet.worksheet import Worksheet
 import shutil
 import jpype
 import asposecells
-
 jpype.startJVM()
 import asposecells.api as aspose
 from PyPDF2 import PdfWriter, PdfReader, PdfMerger
@@ -56,7 +55,8 @@ class ReceiptService:
         self.order_no = data.orderNo
         self.retailer_name = data.retailer.name
         self.wholesaler_name = data.wholesaler.name
-        self.order_items: List[dto.OrderItem] = self._filter_not_null(data.orderItems)
+        self.order_items: List[dto.OrderItem] = self._filter_not_null(
+            data.orderItems)
         return
 
     @staticmethod
@@ -292,13 +292,15 @@ class ReceiptService:
         retail_name = Cell(2, 7, self.retailer_name)
         issue_date = Cell(8, 1, ReceiptService.get_today())
 
-        calc_prices = list(map(lambda item: item.price * item.quantity, self.order_items))
+        calc_prices = list(map(lambda item: item.price *
+                                            item.quantity, self.order_items))
         tot_price = sum(calc_prices)
 
         top_tot_price = Cell(8, 4, tot_price)
         bottom_tot_price = Cell(24, 11, tot_price)
 
-        sheet.update_cells([order_id, retail_name, issue_date, top_tot_price, bottom_tot_price])
+        sheet.update_cells(
+            [order_id, retail_name, issue_date, top_tot_price, bottom_tot_price])
         return
 
     # gspread
@@ -315,7 +317,8 @@ class ReceiptService:
     # gspread
     def update_data_to_gspreadsheet(self, doc: Spreadsheet):
         max_row = 13
-        receipt_num = ceil(len(self.order_items) / max_row)  # max_row 개수보다 많으면 영수증을 분리함.
+        # max_row 개수보다 많으면 영수증을 분리함.
+        receipt_num = ceil(len(self.order_items) / max_row)
 
         default_sheet_name = "Sheet1"
         sheet: gspread.Worksheet = doc.worksheet(default_sheet_name)
@@ -341,6 +344,7 @@ class ReceiptService:
             elif n > 0:
 
                 name = f'Sheet{str(n + 1)}'
+
                 new_sheet: gspread.Worksheet = sheet.duplicate(insert_sheet_index=n, new_sheet_name=name)
                 new_sheet.batch_clear(['A11:K23'])
 
