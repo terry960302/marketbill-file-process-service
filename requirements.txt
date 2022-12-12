@@ -1,5 +1,5 @@
-boto3==1.26.22
-botocore==1.29.22
+boto3~=1.26.26
+botocore~=1.29.26
 cachetools==5.2.0
 certifi==2022.9.24
 charset-normalizer==2.1.1
@@ -26,6 +26,6 @@ six==1.16.0
 urllib3==1.26.13
 
 peewee~=3.15.4
-pdfminer~=20191125
 openpyxl~=3.0.10
 pypdf2~=2.11.2
+fastapi~=0.88.0
