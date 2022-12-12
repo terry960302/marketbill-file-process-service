@@ -3,6 +3,8 @@ from fastapi import status
 from service.receipt_service import ReceiptService
 from model import receipt_process_input as dto, gateway_response as r
 from datastore.datastore import Datastore
+import traceback
+import sys
 
 
 def handle_receipt_process(req_body, form_name="receipt_001"):
@@ -30,7 +32,9 @@ def handle_receipt_process(req_body, form_name="receipt_001"):
             ).to_dict()).to_dict()
 
     except Exception as e:
+        exc_info = sys.exc_info()
+        ex = ''.join(traceback.format_exception(*exc_info))
         return r.GatewayResponse(
             statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            body=r.ErrorBody(message=json.dumps(e)).to_dict()
+            body=r.ErrorBody(message=ex).to_dict()
         ).to_dict()

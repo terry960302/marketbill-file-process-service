@@ -7,6 +7,20 @@ import jpype
 app = FastAPI()
 
 
+@app.on_event("startup")
+def on_start():
+    def init_jvm():
+        if jpype.isJVMStarted():
+            return
+        stream = os.popen('java -version')
+        output = stream.read()
+        print('JVM path : ', jpype.getDefaultJVMPath())
+        jpype.startJVM(jpype.getDefaultJVMPath())
+        jpype.java.lang.System.out.println("JVM checked from java functions")
+        print(output)
+    init_jvm()
+
+
 @app.on_event("shutdown")
 def on_shutdown():
     jpype.shutdownJVM()

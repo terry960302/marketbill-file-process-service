@@ -20,10 +20,6 @@ import time
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 import shutil
-import jpype
-jpype.startJVM()
-import asposecells
-import asposecells.api as aspose
 from PyPDF2 import PdfWriter, PdfReader, PdfFileReader
 
 
@@ -47,7 +43,7 @@ class ReceiptService:
         # 구글 계정 연동
         self.credential = None
         # s3에 저장될 파일명
-        file_name: str = f"receipt_{data.wholesaler.name}_" + str(data.orderNo)
+        file_name: str = f"receipt_{data.wholesaler.name}_{data.orderNo}"
         self.file_name = file_name
         # pdf 파일 저장 경로
         self.local_file_path: str = ReceiptService.LOCAL_STORAGE_PATH + file_name + ReceiptService.EXPORT_FILE_FORMAT
@@ -171,6 +167,9 @@ class ReceiptService:
 
     # local
     def export_pdf_from_local_excel(self, excel_file_path: str):
+        import asposecells
+        import asposecells.api as aspose
+
         size_to_reduce = 20
         pdf_file_path = self.local_file_path
 
@@ -363,7 +362,6 @@ class ReceiptService:
 
                 new_sheet.update_cells(cells)
         return
-
 
 # # test
 #

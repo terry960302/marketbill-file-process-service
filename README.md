@@ -1,0 +1,1 @@
+https://felixgondwe.medium.com/set-java-home-on-ubuntu-docker-container-e302a7aa45ad
