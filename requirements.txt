@@ -14,6 +14,8 @@ defusedxml==0.7.1
 et-xmlfile==1.1.0
 fastapi==0.88.0
 fonttools==4.38.0
+fpdf==1.7.2
+fpdf2==2.6.0
 google-auth==2.15.0
 google-auth-oauthlib==0.7.1
 gspread==5.7.2
@@ -31,6 +33,8 @@ oauthlib==3.2.2
 openpyxl==3.0.10
 packaging==22.0
 pandas==1.5.2
+pathlib==1.0.1
+pdfkit==1.0.0
 pdfminer.six==20221105
 peewee==3.15.4
 Pillow==9.3.0
@@ -46,6 +50,7 @@ python-dateutil==2.8.2
 python-dotenv==0.21.0
 pytz==2022.6
 PyYAML==6.0
+reportlab==3.6.12
 requests==2.28.1
 requests-oauthlib==1.3.1
 rsa==4.9
@@ -63,5 +68,6 @@ watchfiles==0.18.1
 websockets==10.4
 workbook==1.1
 xlrd==2.0.1
+xlsx2html==0.4.0
 xlutils==2.0.0
 xlwt==1.3.0

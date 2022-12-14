@@ -7,7 +7,7 @@ import traceback
 import sys
 
 
-def handle_receipt_process(req_body, form_name="receipt_001"):
+def handle_receipt_process(req_body, form_name="receipt_001") -> r.GatewayResponse:
     try:
         # TODO: 다시 주석풀고 속도 영향 안가게 잘 배치할 필요가 있음
         # db = Datastore()
@@ -19,8 +19,8 @@ def handle_receipt_process(req_body, form_name="receipt_001"):
 
         receipt_form_name = form_name
         json_input = dto.ReceiptProcessInput(**json_dict)
-        service = ReceiptService(json_input, receipt_form_name)
-        output = service.process_receipt_from_local()
+        service = ReceiptService(json_input)
+        output = service.process_receipt_pdf()
 
         return r.GatewayResponse(
             statusCode=status.HTTP_201_CREATED,
