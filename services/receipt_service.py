@@ -29,7 +29,7 @@ class ReceiptService:
     TMP_STORAGE_PATH = f'{ROOT_DIR if ROOT_DIR != "/" else ""}/tmp_storage'
     PDF_FORMAT = ".pdf"
     REMOTE_STORAGE_TYPE = "s3"
-    REMOTE_STORAGE_DIR = "file-process-services-storage"
+    REMOTE_STORAGE_DIR = "file-process-service-storage"
     REMOTE_STORAGE_URI_PREFIX = "https://marketbill-storage.s3.ap-northeast-2.amazonaws.com/"
     REMOTE_CDN_URI_PREFIX = "https://d23zpri05ibxyp.cloudfront.net"
 

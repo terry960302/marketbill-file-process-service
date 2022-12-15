@@ -12,9 +12,9 @@ phases:
       - aws --version
       - echo $AWS_DEFAULT_REGION
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
-      - CONTAINER_NAME=file-process-services-container # ecs cluster container name on which upload source file to
+      - CONTAINER_NAME=file-process-service-container # ecs cluster container name on which upload source file to
       - IMAGE_TAG="$(date '+%Y%m%d%H%M%S')"
-      - REPOSITORY_URI=113244157722.dkr.ecr.ap-northeast-2.amazonaws.com/marketbill-file-process-services
+      - REPOSITORY_URI=113244157722.dkr.ecr.ap-northeast-2.amazonaws.com/marketbill-file-process-service
 
   build:
     commands:
