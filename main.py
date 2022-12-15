@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
-from handler.root_handler import health_check
-from handler.process_handler import handle_receipt_process
+from controllers.root_controller import health_check
+from controllers.process_controller import handle_receipt_process
 
 app = FastAPI()
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Union, List
 import urllib3
 import io
-from model.pdf_order_item import PdfOrderItem
+from models.pdf_order_item import PdfOrderItem
 from datetime import datetime
 from pytz import timezone
 

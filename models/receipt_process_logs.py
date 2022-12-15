@@ -1,6 +1,6 @@
 from peewee import *
 import datetime
-from model.base_model import BaseModel
+from models.base_model import BaseModel
 
 
 class ReceiptProcessLogs(BaseModel):

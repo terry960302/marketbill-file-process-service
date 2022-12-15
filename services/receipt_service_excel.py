@@ -12,8 +12,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 from gspread.cell import Cell
 import requests
 from math import ceil
-from model import receipt_process_input as dto
-from model.receipt_process_output import ReceiptProcessOutput
+from models import receipt_process_input as dto
+from models.receipt_process_output import ReceiptProcessOutput
 from typing import List
 import time
 from openpyxl import Workbook, load_workbook
@@ -41,7 +41,7 @@ class ReceiptServiceExcel:
     EXPORT_FILE_FORMAT = ".pdf"
     EXCEL_FILE_FORMAT = ".xlsx"
     STORAGE_TYPE = "s3"
-    REMOTE_STORAGE_DIR = "file-process-service-storage"
+    REMOTE_STORAGE_DIR = "file-process-services-storage"
     REMOTE_STORAGE_URI_PREFIX = "https://marketbill-storage.s3.ap-northeast-2.amazonaws.com/"
     REMOTE_CDN_URI_PREFIX = "https://d23zpri05ibxyp.cloudfront.net"
 
@@ -468,9 +468,9 @@ class ReceiptServiceExcel:
 #
 #     json_input = dto.ReceiptProcessInput(**json_object)
 #     print("총 상품 개수(None포함) : ", len(json_input.orderItems))
-#     service = ReceiptService(json_input, receipt_form_name)
-#     # output = service.process_receipt_from_google_spreadsheet() # 구글 스프레드시트 버전
-#     output = service.process_receipt_from_local()  # 로컬 엑셀파일 처리 버전
+#     services = ReceiptService(json_input, receipt_form_name)
+#     # output = services.process_receipt_from_google_spreadsheet() # 구글 스프레드시트 버전
+#     output = services.process_receipt_from_local()  # 로컬 엑셀파일 처리 버전
 #
 #     print("결과")
 #     print(output.to_dict())

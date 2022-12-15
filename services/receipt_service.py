@@ -8,9 +8,9 @@ from botocore.client import BaseClient
 from config import ACCESS_KEY_ID, ACCESS_SECRET_KEY, BUCKET_NAME
 import os
 from math import ceil
-from model.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType, User
-from model.receipt_process_output import ReceiptProcessOutput
-from model.pdf_order_item import PdfOrderItem
+from models.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType, User
+from models.receipt_process_output import ReceiptProcessOutput
+from models.pdf_order_item import PdfOrderItem
 from typing import List
 import time
 from pathlib import Path
@@ -29,7 +29,7 @@ class ReceiptService:
     TMP_STORAGE_PATH = f'{ROOT_DIR if ROOT_DIR != "/" else ""}/tmp_storage'
     PDF_FORMAT = ".pdf"
     REMOTE_STORAGE_TYPE = "s3"
-    REMOTE_STORAGE_DIR = "file-process-service-storage"
+    REMOTE_STORAGE_DIR = "file-process-services-storage"
     REMOTE_STORAGE_URI_PREFIX = "https://marketbill-storage.s3.ap-northeast-2.amazonaws.com/"
     REMOTE_CDN_URI_PREFIX = "https://d23zpri05ibxyp.cloudfront.net"
 
