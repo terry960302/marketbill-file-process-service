@@ -28,10 +28,11 @@ https://felixgondwe.medium.com/set-java-home-on-ubuntu-docker-container-e302a7aa
 
 ### 결과
 - 컴포넌트 병렬 처리
-  - 기존에
+  - 기존에 PDF처리하는 거 자체가 시간소모가 크지 않아 개선해도 별차이가 없음
 - 멀티프로세싱 요청 처리
   : 단건에선 개선이 없으나 여러 요청에서 기하급수적인 개선이 이뤄짐.
   - 1개 : 2.3s
+  - 10개 : 2.66s
   - 50개 : 4.9s
   - 100개 : 8.9s
 
