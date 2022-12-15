@@ -1,7 +1,7 @@
 from peewee import *
 import os
-from model.receipt_process_logs import ReceiptProcessLogs
-from model.base_model import db
+from models.receipt_process_logs import ReceiptProcessLogs
+from models.base_model import db
 
 
 class Datastore:

@@ -18,6 +18,9 @@ class ErrorBody:
     def to_str(self) -> str:
         return json.dumps(asdict(self))
 
+    def to_dict(self) -> dict:
+        return asdict(self)
+
 
 @dataclass
 class ReceiptOutput:
@@ -28,3 +31,6 @@ class ReceiptOutput:
 
     def to_str(self) -> str:
         return json.dumps(asdict(self))
+
+    def to_dict(self) -> dict:
+        return asdict(self)
