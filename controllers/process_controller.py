@@ -14,7 +14,6 @@ def handle_receipt_process(req_body) -> r.GatewayResponse:
         # db.set_postgres()
 
         json_dict = json.loads(req_body)
-        print("Receipt data : ", json_dict)
 
         json_input = dto.ReceiptProcessInput(**json_dict)
         service = ReceiptService(json_input)

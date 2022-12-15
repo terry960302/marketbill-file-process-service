@@ -16,7 +16,7 @@ class ErrorBody:
     message: str = field(default_factory=str)
 
     def to_str(self) -> str:
-        return json.dumps(asdict(self))
+        return json.dumps(asdict(self), ensure_ascii=False)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -30,7 +30,7 @@ class ReceiptOutput:
     metadata: str = field(default_factory=str)
 
     def to_str(self) -> str:
-        return json.dumps(asdict(self))
+        return json.dumps(asdict(self), ensure_ascii=False)
 
     def to_dict(self) -> dict:
         return asdict(self)

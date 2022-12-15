@@ -12,16 +12,16 @@ phases:
       - aws --version
       - echo $AWS_DEFAULT_REGION
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
-      - CONTAINER_NAME=file-process-services-container # ecs cluster container name on which upload source file to
+      - CONTAINER_NAME=file-process-service-container # ecs cluster container name on which upload source file to
       - IMAGE_TAG="$(date '+%Y%m%d%H%M%S')"
-      - REPOSITORY_URI=113244157722.dkr.ecr.ap-northeast-2.amazonaws.com/marketbill-file-process-services-dev
+      - REPOSITORY_URI=113244157722.dkr.ecr.ap-northeast-2.amazonaws.com/marketbill-file-process-service-dev
 
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - echo $IMAGE_TAG
-      - docker build -f lambda.dev.lambda.Dockerfile -t $REPOSITORY_URI:latest .
+      - docker build -f lambda.dev.Dockerfile -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
 
   post_build:
