@@ -74,9 +74,9 @@ class ReceiptService:
         return profile
 
     def process_receipt_pdf(self):
-        self.create_pdf_from_data()
+        pdf_buffer = self.create_pdf_from_data()
         print("1. pdf 파일 생성 완료")
-        metadata = self.upload_receipt_to_s3()
+        metadata = self.upload_receipt_to_s3(pdf_buffer)
         print("2. s3 업로드 완료")
         output = self.create_output(metadata)
         return output
@@ -114,12 +114,16 @@ class ReceiptService:
             items_section = pdf_generator.create_items_section(items=partial_items)
             elements.insert(items_section_idx + (i * 8), items_section)
         pdf_generator.doc.build(elements)
-        return
+        return pdf_generator.buffer
 
     # common
-    def upload_receipt_to_s3(self) -> str:
+    def upload_receipt_to_s3(self, buffer) -> str:
         profile = self._get_profile()
         object_name = f'{self.remote_storage_dir}/{profile}/{self.file_name}{self.pdf_format}'
+
+        pdf = PdfFileReader(buffer)
+        pdf_info = pdf.getDocumentInfo()
+        pdf_metadata = str(pdf_info)
 
         s3_client: BaseClient = boto3.client(
             self.remote_storage_type,
@@ -127,17 +131,13 @@ class ReceiptService:
             aws_secret_access_key=ACCESS_SECRET_KEY
         )
 
-        response = s3_client.upload_file(
-            self.pdf_file_path,
+        # 파일을 다시 읽을 수 있도록 처음부터 읽게 설정
+        buffer.seek(0)
+        # 자동으로 Buffer가 close되므로 buffer.close() 가 필요없음
+        s3_client.upload_fileobj(
+            buffer,
             BUCKET_NAME,
             object_name)
-
-        pdf = PdfFileReader(open(self.pdf_file_path, "rb"))
-        pdf_info = pdf.getDocumentInfo()
-        pdf_metadata = str(pdf_info)
-
-        if os.path.isfile(self.pdf_file_path):
-            os.remove(self.pdf_file_path)
 
         return pdf_metadata
 

@@ -1,3 +1,5 @@
+import os
+
 from reportlab.platypus import SimpleDocTemplate, Image, PageBreak
 from reportlab.platypus.tables import Table
 from reportlab.platypus.tables import colors
@@ -38,9 +40,14 @@ class PdfGenerator:
             TTFont("nanum_gothic_700", f'{self.font_dir}/NanumGothic-ExtraBold.ttf'))
         # width : 7 inch(total)
         # : PDF 생성할 시 전체 너비입니다. 컬럼의 폭을 계산할 때 참고하는 목적이 있습니다. 여기선 7인치로 설정하여 작업했습니다.
-        self.doc = SimpleDocTemplate(self.pdf_path, pagesize=letter, title=file_name, author="Team Marketbill",
+        buffer = io.BytesIO()
+        self.buffer = buffer
+        self.doc = SimpleDocTemplate(buffer, pagesize=letter, title=file_name, author="Team Marketbill",
                                      creator="Taewan Kim", subject="마켓빌 영수증",
                                      producer="Powered by reportlab PDF library.")
+        # self.doc = SimpleDocTemplate(self.pdf_path, pagesize=letter, title=file_name, author="Team Marketbill",
+        #                              creator="Taewan Kim", subject="마켓빌 영수증",
+        #                              producer="Powered by reportlab PDF library.")
         return
 
     @staticmethod
@@ -56,11 +63,14 @@ class PdfGenerator:
         return '{:,.0f}'.format(num)
 
     @staticmethod
-    def download_url_image(url: str) -> bytes:
+    def download_url_image(url: str):
         http = urllib3.PoolManager()
         response = http.request('GET', url, preload_content=False)
         buffered_response = io.BufferedReader(response, 2048)
-        return buffered_response.read()
+        img_bytes = buffered_response.read()
+        return io.BytesIO(img_bytes)
+        # response = requests.get(url)
+        # return io.BytesIO(response.content)
 
     def create_header(self, title: str) -> Table:
         data = [[title, '', '', '', '']]
@@ -104,7 +114,7 @@ class PdfGenerator:
         row_heights = [height] * 4
 
         image_buffer = PdfGenerator.download_url_image(stamp_img_url)
-        stamp_img = Image(io.BytesIO(image_buffer))
+        stamp_img = Image(image_buffer)
         stamp_img.drawWidth = height
         stamp_img.drawHeight = height
         stamp_item = stamp_img if stamp_img is not None else "(인)"
