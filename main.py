@@ -31,5 +31,3 @@ def handle_root():
 async def handle_receipt(request: Request):
     json_object = await request.json()
     return await run_in_process(handle_receipt_process, json_object)
-
-    # return handle_receipt_process(json_object)
