@@ -21,7 +21,7 @@ phases:
       - echo Build started on `date`
       - echo Building the Docker image...
       - echo $IMAGE_TAG
-      - docker build -f lambda.Dockerfile -t $REPOSITORY_URI:latest .
+      - docker build -f python.Dockerfile -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
 
   post_build:
