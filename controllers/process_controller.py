@@ -13,7 +13,7 @@ def handle_receipt_process(req_body) -> r.GatewayResponse:
         # db = Datastore()
         # db.set_postgres()
 
-        json_dict = json.loads(req_body)
+        json_dict = json.loads(req_body) if req_body is str else dict(req_body) # 람다 환경인지 로컬 환경인지에 따른 분기
 
         json_input = dto.ReceiptProcessInput(**json_dict)
         service = ReceiptService(json_input)

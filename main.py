@@ -9,7 +9,7 @@ app = FastAPI()
 
 async def run_in_process(fn, *args):
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(app.state.executor, fn, *args)  # wait and return result
+    return await loop.run_in_executor(app.state.executor, fn, *args)
 
 
 @app.on_event("startup")
