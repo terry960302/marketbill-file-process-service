@@ -1,66 +1,33 @@
-import json
-import os
-import logging
-from handler.root_handler import health_check
-from handler.process_handler import process_file
-from model import gateway_response as r
+from fastapi import FastAPI, Request
+from controllers.root_controller import health_check
+from controllers.process_controller import handle_receipt_process
+from concurrent.futures.process import ProcessPoolExecutor
+import asyncio
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+app = FastAPI()
 
 
-def lambda_handler(event, context):
-    method = "httpMethod"
-
-    logger.info('## EVENT\r' + json.dumps(event))
-    logger.info('## ENVIRONMENT VARIABLES\r' + json.dumps(dict(**os.environ)))
-
-    if event[method] == 'GET':
-        return health_check()
-    elif event[method] == 'POST':
-        body = event["body"]
-        return process_file(body)
-    else:
-        return r.GatewayResponse(
-            statusCode=403,
-            body=r.ErrorBody(message="Unsupported http method").to_str()
-        )
+async def run_in_process(fn, *args):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(app.state.executor, fn, *args)
 
 
-""" API gateway event JSON
-{
-    "resource": "/",
-    "path": "/",
-    "httpMethod": "GET",
-    "requestContext": {
-        "resourcePath": "/",
-        "httpMethod": "GET",
-        "path": "/Prod/",
-        ...
-    },
-    "headers": {
-        "accept": "text/html",
-        "accept-encoding": "gzip, deflate, br",
-        "Host": "xxx.us-east-2.amazonaws.com",
-        "User-Agent": "Mozilla/5.0",
-        ...
-    },
-    "multiValueHeaders": {
-        "accept": [
-            "text/html"
-        ],
-        "accept-encoding": [
-            "gzip, deflate, br"
-        ],
-        ...
-    },
-    "queryStringParameters": {
-        "postcode": 12345
-        },
-    "multiValueQueryStringParameters": null,
-    "pathParameters": null,
-    "stageVariables": null,
-    "body": null,
-    "isBase64Encoded": false
-}
-"""
+@app.on_event("startup")
+async def on_startup():
+    app.state.executor = ProcessPoolExecutor()
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    app.state.executor.shutdown()
+
+
+@app.get("/")
+def handle_root():
+    return health_check()
+
+
+@app.post("/")
+async def handle_receipt(request: Request):
+    json_object = await request.json()
+    return await run_in_process(handle_receipt_process, json_object)

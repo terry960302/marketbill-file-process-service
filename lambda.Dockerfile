@@ -1,8 +1,8 @@
 FROM public.ecr.aws/lambda/python:3.8
 MAINTAINER Taewan Kim "terry960302@gmail.com"
 
-WORKDIR /app
-COPY . /app
+COPY . ${LAMBDA_TASK_ROOT}
+WORKDIR ${LAMBDA_TASK_ROOT}
 
 RUN pip install -r requirements.txt
 
@@ -16,5 +16,5 @@ ENV DB_HOST=marketbill-db.ciegftzvpg1l.ap-northeast-2.rds.amazonaws.com
 ENV DB_PORT=5432
 ENV DB_NAME=prod-db
 
-CMD ["main.lambda_handler"]
+CMD ["handler.lambda_handler"]
 
