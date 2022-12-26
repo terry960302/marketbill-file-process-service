@@ -45,9 +45,6 @@ class PdfGenerator:
         self.doc = SimpleDocTemplate(buffer, pagesize=letter, title=file_name, author="Team Marketbill",
                                      creator="Taewan Kim", subject="마켓빌 영수증",
                                      producer="Powered by reportlab PDF library.")
-        # self.doc = SimpleDocTemplate(self.pdf_path, pagesize=letter, title=file_name, author="Team Marketbill",
-        #                              creator="Taewan Kim", subject="마켓빌 영수증",
-        #                              producer="Powered by reportlab PDF library.")
         return
 
     @staticmethod
@@ -69,8 +66,6 @@ class PdfGenerator:
         buffered_response = io.BufferedReader(response, 2048)
         img_bytes = buffered_response.read()
         return io.BytesIO(img_bytes)
-        # response = requests.get(url)
-        # return io.BytesIO(response.content)
 
     def create_header(self, title: str) -> Table:
         data = [[title, '', '', '', '']]
