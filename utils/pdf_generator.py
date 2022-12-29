@@ -258,7 +258,7 @@ class PdfGenerator:
 
     # 반환된 elements 배열의 4번째 index 에 items_sections 을 생성 후 넣어주면 됨
     def create_form_elements(self, order_no: str, receipt_owner: str, business_no: str, company_name: str,
-                             person_name: str, address: str, business_category: str, business_sub_category,
+                             employer_name: str, address: str, business_category: str, business_sub_category,
                              stamp_img_url: str, tot_price: int, etc: str,
                              prev_balance: Union[None, int],
                              deposit: Union[None, int],
@@ -270,7 +270,7 @@ class PdfGenerator:
         sub_header = self.create_sub_header(order_no=order_no, name=receipt_owner)
         supply_section = self.create_supply_section(business_no=business_no,
                                                     company_name=company_name,
-                                                    name=person_name,
+                                                    name=employer_name,
                                                     address=address,
                                                     business_category=business_category,
                                                     business_sub_category=business_sub_category,

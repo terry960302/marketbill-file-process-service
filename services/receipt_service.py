@@ -8,7 +8,7 @@ from botocore.client import BaseClient
 from config import ACCESS_KEY_ID, ACCESS_SECRET_KEY, BUCKET_NAME
 import os
 from math import ceil
-from models.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType, User
+from models.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType
 from models.receipt_process_output import ReceiptProcessOutput
 from models.pdf_order_item import PdfOrderItem
 from typing import List
@@ -45,8 +45,8 @@ class ReceiptService:
         self.pdf_file_path: str = f'{self.tmp_storage_path}/{file_name}{self.pdf_format}'
 
         self.order_no = data.orderNo
-        self.retailer_name = data.retailer.name
-        self.wholesaler_name = data.wholesaler.name
+        self.retailer = data.retailer
+        self.wholesaler = data.wholesaler
         self.order_items: List[OrderItem] = self._filter_not_null(
             data.orderItems)
         return
@@ -89,18 +89,19 @@ class ReceiptService:
         items = list(
             map(lambda item: PdfOrderItem(name=f'({item.flower.flowerType.name}){item.flower.name}-{item.grade}',
                                           unit_price=item.price, quantity=item.quantity), self.order_items))
-
+        # "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png"
         form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
-                                                           receipt_owner=self.retailer_name,
-                                                           business_no="244-88-01311", company_name="주식회사 꿀벌원예",
-                                                           person_name="배갑순",
-                                                           address="서울특별시 서초구 강남대로 27, 146호\n(양재동, 화훼유통공사생화매장) ☎ 579-3199",
-                                                           business_category="도매 및 소매업",
-                                                           business_sub_category="화초 및 산식물 도소매업",
-                                                           stamp_img_url="https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+                                                           receipt_owner=self.retailer.name,
+                                                           business_no=self.wholesaler.businessNo,
+                                                           company_name=self.wholesaler.companyName,
+                                                           employer_name=self.wholesaler.employerName,
+                                                           address=f'{self.wholesaler.address} ☎ {self.wholesaler.companyPhoneNo}',
+                                                           business_category=self.wholesaler.businessMainCategory,
+                                                           business_sub_category=self.wholesaler.businessSubCategory,
+                                                           stamp_img_url=self.wholesaler.sealStampImgUrl,
                                                            tot_price=tot_price,
                                                            etc="", prev_balance=None, deposit=None,
-                                                           balance=None, bank_account="농협 : 351-5249-3199-43 (주)꿀벌원예")
+                                                           balance=None, bank_account=self.wholesaler.bankAccount)
         max_row = 13
         items_section_idx = 4
         page_num = ceil(len(items) / max_row)

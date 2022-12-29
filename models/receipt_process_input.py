@@ -3,8 +3,20 @@ from typing import List, Optional
 
 
 @dataclass
-class User:
+class Retailer:
     name: str
+
+@dataclass
+class Wholesaler:
+    businessNo: str
+    companyName: str
+    employerName: str
+    sealStampImgUrl: str
+    address: str
+    companyPhoneNo: str
+    businessMainCategory: str
+    businessSubCategory: str
+    bankAccount: str
 
 
 @dataclass
@@ -35,8 +47,8 @@ class OrderItem:
 @dataclass
 class ReceiptProcessInput:
     orderNo: str
-    retailer: User
-    wholesaler: User
+    retailer: Retailer
+    wholesaler: Wholesaler
     orderItems: List[OrderItem]
 
     def __post_init__(self):
