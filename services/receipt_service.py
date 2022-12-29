@@ -39,7 +39,7 @@ class ReceiptService:
         self.tmp_storage_path = ReceiptService.TMP_STORAGE_PATH
         self.pdf_format = ReceiptService.PDF_FORMAT
         # s3에 저장될 파일명
-        file_name: str = f"receipt_{data.wholesaler.name}_{data.orderNo}"
+        file_name: str = f"receipt_{data.wholesaler.companyName}_{data.orderNo}"
         self.file_name = file_name
         # pdf 파일 저장 경로
         self.pdf_file_path: str = f'{self.tmp_storage_path}/{file_name}{self.pdf_format}'
@@ -89,7 +89,6 @@ class ReceiptService:
         items = list(
             map(lambda item: PdfOrderItem(name=f'({item.flower.flowerType.name}){item.flower.name}-{item.grade}',
                                           unit_price=item.price, quantity=item.quantity), self.order_items))
-        # "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png"
         form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
                                                            receipt_owner=self.retailer.name,
                                                            business_no=self.wholesaler.businessNo,
@@ -155,46 +154,55 @@ class ReceiptService:
         )
 
 
-def _create_json_mock(num: int = 100) -> dict:
-    today = datetime.now(timezone('Asia/Seoul'))
-    today = datetime.strftime(today, '%Y%m%d')
-    basic_info = {
-        "orderNo": f'{today}M1230918',
-        "retailer": {
-            "name": "꽃소매"
-        },
-        "wholesaler": {
-            "name": "꽃도매"
-        },
-    }
-
-    items = []
-    for i in range(0, num):
-        item = {
-            "flower": {
-                "name": "테데오옐로우",
-                "flowerType": {
-                    "name": "국화"
-                }
-            },
-            "quantity": 17,
-            "grade": "상",
-            "price": 10000
-        }
-        item["flower"]["name"] = f'랜덤꽃{i}'
-        item["price"] = random.randrange(1000, 10000)
-        item["quantity"] = random.randrange(10, 100)
-        items.append(item)
-
-    basic_info["orderItems"] = items
-    return basic_info
-
-
-if __name__ == "__main__":
-    mock_data = _create_json_mock(13)
-    start_time = time.time()
-    input = ReceiptProcessInput(**mock_data)
-    service = ReceiptService(input)
-    output = service.process_receipt_pdf()
-    print(output)
-    print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))
+# def _create_json_mock(num: int = 100) -> dict:
+#     today = datetime.now(timezone('Asia/Seoul'))
+#     today = datetime.strftime(today, '%Y%m%d')
+#     basic_info = {
+#         "orderNo": f'{today}M1230918',
+#         "retailer": {
+#             "name": "꽃소매"
+#         },
+#         "wholesaler": {
+#             "businessNo": "98733987123",
+#             "companyName": "(주)꿀벌원예",
+#             "employerName": "배갑순",
+#             "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+#             # "address": "서울특별시 서초구 강남대로 27, 146호\n(양재동, 화훼유통공사생화매장)",
+#             "address": "ㅁㄴ아ㅣㅓㅁ니ㅏ어ㅣ먼이ㅓㅁㄴㅇ",
+#             "companyPhoneNo": "2978123-1238",
+#             "businessMainCategory": "도매 및 소매업",
+#             "businessSubCategory": "화초 및 산식물 도소매업",
+#             "bankAccount": "농협 : 351-5249-3199-43 (주)꿀벌원예",
+#         },
+#     }
+#
+#     items = []
+#     for i in range(0, num):
+#         item = {
+#             "flower": {
+#                 "name": "테데오옐로우",
+#                 "flowerType": {
+#                     "name": "국화"
+#                 }
+#             },
+#             "quantity": 17,
+#             "grade": "상",
+#             "price": 10000
+#         }
+#         item["flower"]["name"] = f'랜덤꽃{i}'
+#         item["price"] = random.randrange(1000, 10000)
+#         item["quantity"] = random.randrange(10, 100)
+#         items.append(item)
+#
+#     basic_info["orderItems"] = items
+#     return basic_info
+#
+#
+# if __name__ == "__main__":
+#     mock_data = _create_json_mock(13)
+#     start_time = time.time()
+#     input = ReceiptProcessInput(**mock_data)
+#     service = ReceiptService(input)
+#     output = service.process_receipt_pdf()
+#     print(output)
+#     print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))

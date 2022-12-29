@@ -52,6 +52,6 @@ class ReceiptProcessInput:
     orderItems: List[OrderItem]
 
     def __post_init__(self):
-        self.retailer = User(**self.retailer)
-        self.wholesaler = User(**self.wholesaler)
+        self.retailer = Retailer(**self.retailer)
+        self.wholesaler = Wholesaler(**self.wholesaler)
         self.orderItems = list(map(lambda item: OrderItem(**item), self.orderItems))
