@@ -17,6 +17,10 @@ from pathlib import Path
 from PyPDF2 import PdfFileReader
 from utils.pdf_generator import PdfGenerator
 from reportlab.platypus import PageBreak
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class ReceiptService:
@@ -75,9 +79,9 @@ class ReceiptService:
 
     def process_receipt_pdf(self):
         pdf_buffer = self.create_pdf_from_data()
-        print("1. pdf 파일 생성 완료")
+        logger.info("## 1. pdf 파일 생성 완료")
         metadata = self.upload_receipt_to_s3(pdf_buffer)
-        print("2. s3 업로드 완료")
+        logger.info("## 2. s3 업로드 완료")
         output = self.create_output(metadata)
         return output
 

@@ -13,6 +13,10 @@ import io
 from models.pdf_order_item import PdfOrderItem
 from datetime import datetime
 from pytz import timezone
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class PdfGenerator:
@@ -61,11 +65,16 @@ class PdfGenerator:
 
     @staticmethod
     def download_url_image(url: str):
-        http = urllib3.PoolManager()
-        response = http.request('GET', url, preload_content=False)
-        buffered_response = io.BufferedReader(response, 2048)
-        img_bytes = buffered_response.read()
-        return io.BytesIO(img_bytes)
+        try:
+            http = urllib3.PoolManager()
+            response = http.request('GET', url, preload_content=False)
+            buffered_response = io.BufferedReader(response, 2048)
+            img_bytes = buffered_response.read()
+            return io.BytesIO(img_bytes)
+        except Exception as e:
+            msg = f'## Failed to download stamp image from URL ({url}). : {e}'
+            logger.error(msg)
+            raise
 
     def create_header(self, title: str) -> Table:
         data = [[title, '', '', '', '']]
@@ -108,41 +117,47 @@ class PdfGenerator:
         height = 0.4 * inch
         row_heights = [height] * 4
 
-        image_buffer = PdfGenerator.download_url_image(stamp_img_url)
-        stamp_img = Image(image_buffer)
-        stamp_img.drawWidth = height
-        stamp_img.drawHeight = height
-        stamp_item = stamp_img if stamp_img is not None else "(인)"
+        try:
+            image_buffer = PdfGenerator.download_url_image(stamp_img_url)
+            stamp_img = Image(image_buffer)
+            stamp_img.drawWidth = height
+            stamp_img.drawHeight = height
+            stamp_item = stamp_img if stamp_img is not None else "(인)"
 
-        data = [["공\n급\n자", "사업자\n등록번호", business_no, "", '', ""],
-                ["", "상호", company_name, "성\n명", name, stamp_item],
-                ["", "사업장\n소재지", address, '', '', ""],
-                ["", "업태", business_category, "종\n목", business_sub_category]]
-        style = [
-            ("SPAN", (0, 0), (0, -1)),  # 공급자 수직 셀병합
-            ("SPAN", (2, 0), (-1, 0)),  # 사업자등록번호 row 셀병합
-            ("SPAN", (2, 2), (-1, 2)),  # 사업장 소재지 row 셀병합
-            ("SPAN", (-2, -1), (-1, -1)),  # 종목 셀병합
-            ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
-            ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 10포인트
-            ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
-            ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
-            ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
-            ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
-            ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, -1), self.font_400),  # 전체 폰트 적용
-            ('FONTNAME', (2, 0), (2, 0), self.font_600),  # 사업자 등록 번호에만 적용
-            ('FONTSIZE', (2, 0), (2, 0), 12),  # 사업자 등록 번호에만 적용
-        ]
+            data = [["공\n급\n자", "사업자\n등록번호", business_no, "", '', ""],
+                    ["", "상호", company_name, "성\n명", name, stamp_item],
+                    ["", "사업장\n소재지", address, '', '', ""],
+                    ["", "업태", business_category, "종\n목", business_sub_category]]
+            style = [
+                ("SPAN", (0, 0), (0, -1)),  # 공급자 수직 셀병합
+                ("SPAN", (2, 0), (-1, 0)),  # 사업자등록번호 row 셀병합
+                ("SPAN", (2, 2), (-1, 2)),  # 사업장 소재지 row 셀병합
+                ("SPAN", (-2, -1), (-1, -1)),  # 종목 셀병합
+                ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
+                ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 10포인트
+                ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
+                ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
+                ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
+                ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTNAME', (0, 0), (-1, -1), self.font_400),  # 전체 폰트 적용
+                ('FONTNAME', (2, 0), (2, 0), self.font_600),  # 사업자 등록 번호에만 적용
+                ('FONTSIZE', (2, 0), (2, 0), 12),  # 사업자 등록 번호에만 적용
+            ]
 
-        table: Table = Table(data, colWidths=col_widths,
-                             rowHeights=row_heights,
-                             style=style)
+            table: Table = Table(data, colWidths=col_widths,
+                                 rowHeights=row_heights,
+                                 style=style)
+            logger.info('## [create_supply_section] completed.')
+            return table
+        except Exception as e:
+            msg = f'## Failed to create_supply_section : {e}'
+            logger.error(msg)
+            raise
 
-        return table
+            # 작성년월일, 공급대가 총액 섹션
 
-    # 작성년월일, 공급대가 총액 섹션
     def create_upper_tot_price_section(self, created_at: str, tot_price: int, etc: str) -> Table:
         # 가로로 최대 4칸만 필요
         col_widths = [2 * inch, 0.4 * inch, 2.6 * inch, 2 * inch]
@@ -167,6 +182,7 @@ class PdfGenerator:
         ]
 
         table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+        logger.info('## [create_upper_tot_price_section] completed.')
         return table
 
     # items 는 총 13개까지만 들어갈 수 있음(더 넣어야하면 pdf page break 필요)
@@ -204,6 +220,7 @@ class PdfGenerator:
         ]
 
         table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+        logger.info('## [create_items_section] completed.')
         return table
 
     # prev_balance : 전잔액
@@ -237,6 +254,7 @@ class PdfGenerator:
         ]
 
         table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+        logger.info('## [create_footer] completed.')
         return table
 
     def create_extra_footer(self, bank_account: str):
@@ -254,6 +272,7 @@ class PdfGenerator:
         ]
 
         table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+        logger.info('## [create_extra_footer] completed.')
         return table
 
     # 반환된 elements 배열의 4번째 index 에 items_sections 을 생성 후 넣어주면 됨
