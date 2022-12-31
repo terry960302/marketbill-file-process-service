@@ -6,6 +6,11 @@ from services.receipt_service import ReceiptService
 from models import receipt_process_input as dto, gateway_response as r
 import traceback
 import sys
+import logging
+
+# 로그 생성
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def handle_receipt_process(req_body) -> r.GatewayResponse:
@@ -15,6 +20,8 @@ def handle_receipt_process(req_body) -> r.GatewayResponse:
         # db.set_postgres()
         is_lambda_env = os.environ.get("LAMBDA_TASK_ROOT") is not None  # 람다 환경인지 로컬 환경인지에 따른 분기
         json_dict = json.loads(req_body) if is_lambda_env else dict(req_body)
+
+        logger.info('## request body : \r' + json.dumps(json_dict))
 
         json_input = dto.ReceiptProcessInput(**json_dict)
         service = ReceiptService(json_input)
@@ -30,9 +37,11 @@ def handle_receipt_process(req_body) -> r.GatewayResponse:
             ).to_str()).to_dict()
 
     except Exception as e:
-        exc_info = sys.exc_info()
-        ex = ''.join(traceback.format_exception(*exc_info))
+        msg = f'Failed handle_receipt_process : {e}'
+        logger.error(msg)
+        # exc_info = sys.exc_info()
+        # ex = ''.join(traceback.format_exception(*exc_info))
         return r.GatewayResponse(
             statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            body=r.ErrorBody(message=ex).to_str()
+            body=r.ErrorBody(message=msg).to_str()
         ).to_dict()

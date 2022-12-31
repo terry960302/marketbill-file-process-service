@@ -6,6 +6,7 @@ from typing import List, Optional
 class Retailer:
     name: str
 
+
 @dataclass
 class Wholesaler:
     businessNo: str
