@@ -77,6 +77,26 @@ class ReceiptService:
             profile = str(profile)
         return profile
 
+    @staticmethod
+    def reformat_address(address: str, company_phone_no: str) -> str:
+        max_letters_per_line = 45
+        if len(address) <= max_letters_per_line:
+            address = f'{address}\n'
+        else:
+            address = address[:max_letters_per_line] \
+                      + "\n" \
+                      + address[max_letters_per_line:]
+        return f'{address} ☎ {company_phone_no}'
+
+    @staticmethod
+    def reformat_company_name(company_name: str) -> str:
+        max_letters_per_line = 15
+        if len(company_name) > max_letters_per_line:
+            company_name = company_name[:max_letters_per_line] \
+                           + "\n" \
+                           + company_name[max_letters_per_line:]
+        return company_name
+
     def process_receipt_pdf(self):
         pdf_buffer = self.create_pdf_from_data()
         logger.info("## 1. pdf 파일 생성 완료")
@@ -97,10 +117,12 @@ class ReceiptService:
         form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
                                                            receipt_owner=self.retailer.name,
                                                            business_no=self.wholesaler.businessNo,
-                                                           company_name=self.wholesaler.companyName,
+                                                           company_name=ReceiptService.reformat_company_name(
+                                                               self.wholesaler.companyName),
                                                            employer_name=self.wholesaler.employerName,
-                                                           address=self.reformat_address(self.wholesaler.address,
-                                                                                         self.wholesaler.companyPhoneNo),
+                                                           address=ReceiptService.reformat_address(
+                                                               self.wholesaler.address,
+                                                               self.wholesaler.companyPhoneNo),
                                                            business_category=self.wholesaler.businessMainCategory,
                                                            business_sub_category=self.wholesaler.businessSubCategory,
                                                            stamp_img_url=self.wholesaler.sealStampImgUrl,
@@ -159,18 +181,9 @@ class ReceiptService:
             metadata=pdf_metadata
         )
 
-    def reformat_address(self, address: str, company_phone_no: str) -> str:
-        max_letters_per_line = 45
-        if len(address) <= max_letters_per_line:
-            address = f'{address}\n'
-        else:
-            address = address[:max_letters_per_line] \
-                      + "\n" \
-                      + address[max_letters_per_line:]
-        return f'{address} ☎ {company_phone_no}'
-
 
 def _create_json_mock(num: int = 100) -> dict:
+    cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
     today = datetime.now(timezone('Asia/Seoul'))
     today = datetime.strftime(today, '%Y%m%d')
     basic_info = {
@@ -180,9 +193,10 @@ def _create_json_mock(num: int = 100) -> dict:
         },
         "wholesaler": {
             "businessNo": "98733987123",
-            "companyName": "(주)꿀벌원예",
+            "companyName": "(주)꿀벌원예" + cur_time,
             "employerName": "배갑순",
-            "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+            # "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+            "sealStampImgUrl": "https://tokyo.hanko.club/ko/wp-content/uploads/sites/15/2002/12/92b3958e876345074354b392f452a10d.jpg",
             "address": "서울특별시 서초구 강남대로 27, 146호 (양재동, 화훼유통공사생화매장)asldljasjdlkjalsd",
             # "address": "ㅁㄴ아ㅣㅓㅁ니ㅏ어ㅣ먼이ㅓㅁㄴㅇ",
             "companyPhoneNo": "2978123-1238",
