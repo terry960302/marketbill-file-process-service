@@ -6,6 +6,7 @@ from reportlab.platypus.tables import colors
 from reportlab.lib.pagesizes import letter, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.utils import ImageReader
 from pathlib import Path
 from typing import Union, List
 import urllib3
@@ -64,7 +65,7 @@ class PdfGenerator:
         return '{:,.0f}'.format(num)
 
     @staticmethod
-    def download_url_image(url: str):
+    def download_url_image(url: str) -> io.BytesIO:
         try:
             http = urllib3.PoolManager()
             response = http.request('GET', url, preload_content=False)
@@ -119,9 +120,11 @@ class PdfGenerator:
 
         try:
             image_buffer = PdfGenerator.download_url_image(stamp_img_url)
+            origin_img = ImageReader(image_buffer)
+            origin_width, origin_height = origin_img.getSize()
             stamp_img = Image(image_buffer)
-            stamp_img.drawWidth = height
             stamp_img.drawHeight = height
+            stamp_img.drawWidth = (height / origin_height) * origin_width
             stamp_item = stamp_img if stamp_img is not None else "(인)"
 
             data = [["공\n급\n자", "사업자\n등록번호", business_no, "", '', ""],
