@@ -146,7 +146,7 @@ class PdfGenerator:
                 ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
                 ('FONTNAME', (0, 0), (-1, -1), self.font_400),  # 전체 폰트 적용
                 ('FONTNAME', (2, 0), (2, 0), self.font_600),  # 사업자 등록 번호에만 적용
-                ('FONTSIZE', (2, 0), (2, 0), 12),  # 사업자 등록 번호에만 적용
+                ('FONTSIZE', (2, 0), (2, 0), 11),  # 사업자 등록 번호에만 적용
             ]
 
             table: Table = Table(data, colWidths=col_widths,
