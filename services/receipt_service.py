@@ -182,58 +182,58 @@ class ReceiptService:
         )
 
 
-def _create_json_mock(num: int = 100) -> dict:
-    cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
-    today = datetime.now(timezone('Asia/Seoul'))
-    today = datetime.strftime(today, '%Y%m%d')
-    basic_info = {
-        "orderNo": f'{today}M1230918',
-        "retailer": {
-            "name": "꽃소매"
-        },
-        "wholesaler": {
-            "businessNo": "98733987123",
-            "companyName": "(주)꿀벌원예" + cur_time,
-            "employerName": "배갑순",
-            # "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
-            "sealStampImgUrl": "https://tokyo.hanko.club/ko/wp-content/uploads/sites/15/2002/12/92b3958e876345074354b392f452a10d.jpg",
-            "address": "서울특별시 서초구 강남대로 27, 146호 (양재동, 화훼유통공사생화매장)asldljasjdlkjalsd",
-            # "address": "ㅁㄴ아ㅣㅓㅁ니ㅏ어ㅣ먼이ㅓㅁㄴㅇ",
-            "companyPhoneNo": "2978123-1238",
-            "businessMainCategory": "도매 및 소매업",
-            "businessSubCategory": "화초 및 산식물 도소매업",
-            "bankAccount": "농협 : 351-5249-3199-43 (주)꿀벌원예",
-        },
-    }
-
-    items = []
-    for i in range(0, num):
-        item = {
-            "flower": {
-                "name": "테데오옐로우",
-                "flowerType": {
-                    "name": "국화"
-                }
-            },
-            "quantity": 17,
-            "grade": "상",
-            "price": 10000
-        }
-        item["flower"]["name"] = f'랜덤꽃{i}'
-        item["price"] = random.randrange(1000, 10000)
-        item["quantity"] = random.randrange(10, 100)
-        items.append(item)
-
-    basic_info["orderItems"] = items
-    return basic_info
-
-
-if __name__ == "__main__":
-    mock_data = _create_json_mock(13)
-
-    start_time = time.time()
-    input = ReceiptProcessInput(**mock_data)
-    service = ReceiptService(input)
-    output = service.process_receipt_pdf()
-    print(output)
-    print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))
+# def _create_json_mock(num: int = 100) -> dict:
+#     cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
+#     today = datetime.now(timezone('Asia/Seoul'))
+#     today = datetime.strftime(today, '%Y%m%d')
+#     basic_info = {
+#         "orderNo": f'{today}M1230918',
+#         "retailer": {
+#             "name": "꽃소매"
+#         },
+#         "wholesaler": {
+#             "businessNo": "98733987123",
+#             "companyName": "(주)꿀벌원예" + cur_time,
+#             "employerName": "배갑순",
+#             # "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+#             "sealStampImgUrl": "https://tokyo.hanko.club/ko/wp-content/uploads/sites/15/2002/12/92b3958e876345074354b392f452a10d.jpg",
+#             "address": "서울특별시 서초구 강남대로 27, 146호 (양재동, 화훼유통공사생화매장)asldljasjdlkjalsd",
+#             # "address": "ㅁㄴ아ㅣㅓㅁ니ㅏ어ㅣ먼이ㅓㅁㄴㅇ",
+#             "companyPhoneNo": "2978123-1238",
+#             "businessMainCategory": "도매 및 소매업",
+#             "businessSubCategory": "화초 및 산식물 도소매업",
+#             "bankAccount": "농협 : 351-5249-3199-43 (주)꿀벌원예",
+#         },
+#     }
+#
+#     items = []
+#     for i in range(0, num):
+#         item = {
+#             "flower": {
+#                 "name": "테데오옐로우",
+#                 "flowerType": {
+#                     "name": "국화"
+#                 }
+#             },
+#             "quantity": 17,
+#             "grade": "상",
+#             "price": 10000
+#         }
+#         item["flower"]["name"] = f'랜덤꽃{i}'
+#         item["price"] = random.randrange(1000, 10000)
+#         item["quantity"] = random.randrange(10, 100)
+#         items.append(item)
+#
+#     basic_info["orderItems"] = items
+#     return basic_info
+#
+#
+# if __name__ == "__main__":
+#     mock_data = _create_json_mock(13)
+#
+#     start_time = time.time()
+#     input = ReceiptProcessInput(**mock_data)
+#     service = ReceiptService(input)
+#     output = service.process_receipt_pdf()
+#     print(output)
+#     print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))
