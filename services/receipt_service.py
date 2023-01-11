@@ -51,8 +51,7 @@ class ReceiptService:
         self.order_no = data.orderNo
         self.retailer = data.retailer
         self.wholesaler = data.wholesaler
-        self.order_items: List[OrderItem] = self._filter_not_null(
-            data.orderItems)
+        self.order_items: List[OrderItem] = self._filter_empty_price(data.orderItems)
         return
 
     @staticmethod
@@ -62,9 +61,11 @@ class ReceiptService:
         return today
 
     @staticmethod
-    def _filter_not_null(order_list: List[OrderItem]) -> List[OrderItem]:
+    def _filter_empty_price(order_list: List[OrderItem]) -> List[OrderItem]:
         def is_not_null(item: OrderItem):
-            return item.price is not None
+            is_not_null_price = item.price is not None
+            is_positive_price = item.price > 0
+            return is_not_null_price and is_positive_price
 
         return list(filter(is_not_null, order_list))
 
@@ -180,7 +181,6 @@ class ReceiptService:
             file_path=cached_file_path,
             metadata=pdf_metadata
         )
-
 
 # def _create_json_mock(num: int = 100) -> dict:
 #     cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
