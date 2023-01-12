@@ -62,12 +62,10 @@ class ReceiptService:
 
     @staticmethod
     def _filter_empty_price(order_list: List[OrderItem]) -> List[OrderItem]:
-        def is_not_null(item: OrderItem):
+        def is_non_empty_price(item: OrderItem):
             is_not_null_price = item.price is not None
-            is_positive_price = item.price > 0
-            return is_not_null_price and is_positive_price
-
-        return list(filter(is_not_null, order_list))
+            return is_not_null_price and item.price > 0
+        return list(filter(is_non_empty_price, order_list))
 
     @staticmethod
     def _get_profile() -> str:
@@ -220,9 +218,14 @@ class ReceiptService:
 #             "price": 10000
 #         }
 #         item["flower"]["name"] = f'랜덤꽃{i}'
-#         item["price"] = random.randrange(1000, 10000)
+#         # item["price"] = random.randrange(1000, 10000)
+#         if i == 0:
+#             item["price"] = None
+#         else:
+#             item["price"] = random.randrange(1000, 10000)
 #         item["quantity"] = random.randrange(10, 100)
 #         items.append(item)
+#
 #
 #     basic_info["orderItems"] = items
 #     return basic_info
