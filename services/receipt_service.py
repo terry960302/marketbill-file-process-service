@@ -8,7 +8,7 @@ from botocore.client import BaseClient
 from config import ACCESS_KEY_ID, ACCESS_SECRET_KEY, BUCKET_NAME
 import os
 from math import ceil
-from models.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType, User
+from models.receipt_process_input import ReceiptProcessInput, OrderItem, Flower, FlowerType
 from models.receipt_process_output import ReceiptProcessOutput
 from models.pdf_order_item import PdfOrderItem
 from typing import List
@@ -17,6 +17,10 @@ from pathlib import Path
 from PyPDF2 import PdfFileReader
 from utils.pdf_generator import PdfGenerator
 from reportlab.platypus import PageBreak
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class ReceiptService:
@@ -39,16 +43,15 @@ class ReceiptService:
         self.tmp_storage_path = ReceiptService.TMP_STORAGE_PATH
         self.pdf_format = ReceiptService.PDF_FORMAT
         # s3에 저장될 파일명
-        file_name: str = f"receipt_{data.wholesaler.name}_{data.orderNo}"
+        file_name: str = f"receipt_{data.wholesaler.companyName}_{data.orderNo}"
         self.file_name = file_name
         # pdf 파일 저장 경로
         self.pdf_file_path: str = f'{self.tmp_storage_path}/{file_name}{self.pdf_format}'
 
         self.order_no = data.orderNo
-        self.retailer_name = data.retailer.name
-        self.wholesaler_name = data.wholesaler.name
-        self.order_items: List[OrderItem] = self._filter_not_null(
-            data.orderItems)
+        self.retailer = data.retailer
+        self.wholesaler = data.wholesaler
+        self.order_items: List[OrderItem] = self._filter_empty_price(data.orderItems)
         return
 
     @staticmethod
@@ -58,11 +61,11 @@ class ReceiptService:
         return today
 
     @staticmethod
-    def _filter_not_null(order_list: List[OrderItem]) -> List[OrderItem]:
-        def is_not_null(item: OrderItem):
-            return item.price is not None
-
-        return list(filter(is_not_null, order_list))
+    def _filter_empty_price(order_list: List[OrderItem]) -> List[OrderItem]:
+        def is_non_empty_price(item: OrderItem):
+            is_not_null_price = item.price is not None
+            return is_not_null_price and item.price > 0
+        return list(filter(is_non_empty_price, order_list))
 
     @staticmethod
     def _get_profile() -> str:
@@ -73,11 +76,31 @@ class ReceiptService:
             profile = str(profile)
         return profile
 
+    @staticmethod
+    def reformat_address(address: str, company_phone_no: str) -> str:
+        max_letters_per_line = 45
+        if len(address) <= max_letters_per_line:
+            address = f'{address}\n'
+        else:
+            address = address[:max_letters_per_line] \
+                      + "\n" \
+                      + address[max_letters_per_line:]
+        return f'{address} ☎ {company_phone_no}'
+
+    @staticmethod
+    def reformat_company_name(company_name: str) -> str:
+        max_letters_per_line = 15
+        if len(company_name) > max_letters_per_line:
+            company_name = company_name[:max_letters_per_line] \
+                           + "\n" \
+                           + company_name[max_letters_per_line:]
+        return company_name
+
     def process_receipt_pdf(self):
         pdf_buffer = self.create_pdf_from_data()
-        print("1. pdf 파일 생성 완료")
+        logger.info("## 1. pdf 파일 생성 완료")
         metadata = self.upload_receipt_to_s3(pdf_buffer)
-        print("2. s3 업로드 완료")
+        logger.info("## 2. s3 업로드 완료")
         output = self.create_output(metadata)
         return output
 
@@ -91,16 +114,20 @@ class ReceiptService:
                                           unit_price=item.price, quantity=item.quantity), self.order_items))
 
         form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
-                                                           receipt_owner=self.retailer_name,
-                                                           business_no="244-88-01311", company_name="주식회사 꿀벌원예",
-                                                           person_name="배갑순",
-                                                           address="서울특별시 서초구 강남대로 27, 146호\n(양재동, 화훼유통공사생화매장) ☎ 579-3199",
-                                                           business_category="도매 및 소매업",
-                                                           business_sub_category="화초 및 산식물 도소매업",
-                                                           stamp_img_url="https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+                                                           receipt_owner=self.retailer.name,
+                                                           business_no=self.wholesaler.businessNo,
+                                                           company_name=ReceiptService.reformat_company_name(
+                                                               self.wholesaler.companyName),
+                                                           employer_name=self.wholesaler.employerName,
+                                                           address=ReceiptService.reformat_address(
+                                                               self.wholesaler.address,
+                                                               self.wholesaler.companyPhoneNo),
+                                                           business_category=self.wholesaler.businessMainCategory,
+                                                           business_sub_category=self.wholesaler.businessSubCategory,
+                                                           stamp_img_url=self.wholesaler.sealStampImgUrl,
                                                            tot_price=tot_price,
                                                            etc="", prev_balance=None, deposit=None,
-                                                           balance=None, bank_account="농협 : 351-5249-3199-43 (주)꿀벌원예")
+                                                           balance=None, bank_account=self.wholesaler.bankAccount)
         max_row = 13
         items_section_idx = 4
         page_num = ceil(len(items) / max_row)
@@ -153,47 +180,63 @@ class ReceiptService:
             metadata=pdf_metadata
         )
 
-
-def _create_json_mock(num: int = 100) -> dict:
-    today = datetime.now(timezone('Asia/Seoul'))
-    today = datetime.strftime(today, '%Y%m%d')
-    basic_info = {
-        "orderNo": f'{today}M1230918',
-        "retailer": {
-            "name": "꽃소매"
-        },
-        "wholesaler": {
-            "name": "꽃도매"
-        },
-    }
-
-    items = []
-    for i in range(0, num):
-        item = {
-            "flower": {
-                "name": "테데오옐로우",
-                "flowerType": {
-                    "name": "국화"
-                }
-            },
-            "quantity": 17,
-            "grade": "상",
-            "price": 10000
-        }
-        item["flower"]["name"] = f'랜덤꽃{i}'
-        item["price"] = random.randrange(1000, 10000)
-        item["quantity"] = random.randrange(10, 100)
-        items.append(item)
-
-    basic_info["orderItems"] = items
-    return basic_info
-
-
-if __name__ == "__main__":
-    mock_data = _create_json_mock(13)
-    start_time = time.time()
-    input = ReceiptProcessInput(**mock_data)
-    service = ReceiptService(input)
-    output = service.process_receipt_pdf()
-    print(output)
-    print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))
+# def _create_json_mock(num: int = 100) -> dict:
+#     cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
+#     today = datetime.now(timezone('Asia/Seoul'))
+#     today = datetime.strftime(today, '%Y%m%d')
+#     basic_info = {
+#         "orderNo": f'{today}M1230918',
+#         "retailer": {
+#             "name": "꽃소매"
+#         },
+#         "wholesaler": {
+#             "businessNo": "98733987123",
+#             "companyName": "(주)꿀벌원예" + cur_time,
+#             "employerName": "배갑순",
+#             # "sealStampImgUrl": "https://user-images.githubusercontent.com/37768791/207530270-d38c7770-642e-433a-b93f-db14bcca74e1.png",
+#             "sealStampImgUrl": "https://tokyo.hanko.club/ko/wp-content/uploads/sites/15/2002/12/92b3958e876345074354b392f452a10d.jpg",
+#             "address": "서울특별시 서초구 강남대로 27, 146호 (양재동, 화훼유통공사생화매장)asldljasjdlkjalsd",
+#             # "address": "ㅁㄴ아ㅣㅓㅁ니ㅏ어ㅣ먼이ㅓㅁㄴㅇ",
+#             "companyPhoneNo": "2978123-1238",
+#             "businessMainCategory": "도매 및 소매업",
+#             "businessSubCategory": "화초 및 산식물 도소매업",
+#             "bankAccount": "농협 : 351-5249-3199-43 (주)꿀벌원예",
+#         },
+#     }
+#
+#     items = []
+#     for i in range(0, num):
+#         item = {
+#             "flower": {
+#                 "name": "테데오옐로우",
+#                 "flowerType": {
+#                     "name": "국화"
+#                 }
+#             },
+#             "quantity": 17,
+#             "grade": "상",
+#             "price": 10000
+#         }
+#         item["flower"]["name"] = f'랜덤꽃{i}'
+#         # item["price"] = random.randrange(1000, 10000)
+#         if i == 0:
+#             item["price"] = None
+#         else:
+#             item["price"] = random.randrange(1000, 10000)
+#         item["quantity"] = random.randrange(10, 100)
+#         items.append(item)
+#
+#
+#     basic_info["orderItems"] = items
+#     return basic_info
+#
+#
+# if __name__ == "__main__":
+#     mock_data = _create_json_mock(13)
+#
+#     start_time = time.time()
+#     input = ReceiptProcessInput(**mock_data)
+#     service = ReceiptService(input)
+#     output = service.process_receipt_pdf()
+#     print(output)
+#     print("총 소요시간 --- %s seconds ---" % (time.time() - start_time))
