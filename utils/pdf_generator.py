@@ -15,8 +15,11 @@ from models.pdf_order_item import PdfOrderItem
 from datetime import datetime
 from pytz import timezone
 import logging
+from constants import strings
 
-logger = logging.getLogger()
+# 로그
+logger = logging.getLogger("pdf_generator")
+logging.basicConfig(format=strings.LOGGER_FORMAT)
 logger.setLevel(logging.INFO)
 
 
@@ -71,44 +74,55 @@ class PdfGenerator:
             response = http.request('GET', url, preload_content=False)
             buffered_response = io.BufferedReader(response, 2048)
             img_bytes = buffered_response.read()
+            logger.info('completed.')
             return io.BytesIO(img_bytes)
         except Exception as e:
-            msg = f'## Failed to download stamp image from URL ({url}). : {e}'
+            msg = f'Failed to download stamp image from URL ({url}). : {e}'
             logger.error(msg)
             raise
 
     def create_header(self, title: str) -> Table:
-        data = [[title, '', '', '', '']]
-        style = [
-            ('SPAN', (0, 0), (-1, 0),),
-            ('ALIGN', (0, 0), (-1, 0), "CENTER"),
-            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
-            ('LINEABOVE', (0, 0), (-1, 0), 2, colors.black),
-            ('LINEBEFORE', (0, 0), (-1, 0), 2, colors.black),
-            ('LINEAFTER', (0, 0), (-1, 0), 2, colors.black),
-            ('FONTNAME', (0, 0), (-1, 0), self.font_700),
-        ]
-        table: Table = Table(data, colWidths=[1.4 * inch] * 5, rowHeights=[0.5 * inch] * 1, style=style)
-        return table
+        try:
+            data = [[title, '', '', '', '']]
+            style = [
+                ('SPAN', (0, 0), (-1, 0),),
+                ('ALIGN', (0, 0), (-1, 0), "CENTER"),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('LINEABOVE', (0, 0), (-1, 0), 2, colors.black),
+                ('LINEBEFORE', (0, 0), (-1, 0), 2, colors.black),
+                ('LINEAFTER', (0, 0), (-1, 0), 2, colors.black),
+                ('FONTNAME', (0, 0), (-1, 0), self.font_700),
+            ]
+            table: Table = Table(data, colWidths=[1.4 * inch] * 5, rowHeights=[0.5 * inch] * 1, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     def create_sub_header(self, order_no: str, name: str) -> Table:
-        col_widths = [0.5 * inch, 2 * inch, 1.5 * inch, 2 * inch, 1 * inch]
-        row_heights = [0.5 * inch] * 1
-        data = [["No.", order_no, '', name, '귀하']]
-        style = [
-            ('ALIGN', (1, 0), (-1, 0), "CENTER"),
-            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('LINEBEFORE', (0, 0), (0, 0), 2, colors.black),
-            ('LINEAFTER', (-1, 0), (-1, 0), 2, colors.black),
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, 0), self.font_400),
-        ]
+        try:
+            col_widths = [0.5 * inch, 2 * inch, 1.5 * inch, 2 * inch, 1 * inch]
+            row_heights = [0.5 * inch] * 1
+            data = [["No.", order_no, '', name, '귀하']]
+            style = [
+                ('ALIGN', (1, 0), (-1, 0), "CENTER"),
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('LINEBEFORE', (0, 0), (0, 0), 2, colors.black),
+                ('LINEAFTER', (-1, 0), (-1, 0), 2, colors.black),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                ('FONTNAME', (0, 0), (-1, 0), self.font_400),
+            ]
 
-        table: Table = Table(data, colWidths=col_widths,
-                             rowHeights=row_heights, style=style)
-        return table
+            table: Table = Table(data, colWidths=col_widths,
+                                 rowHeights=row_heights, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # 공급자 섹션
     def create_supply_section(self, business_no: str, company_name: str, name: str, address: str,
@@ -152,131 +166,147 @@ class PdfGenerator:
             table: Table = Table(data, colWidths=col_widths,
                                  rowHeights=row_heights,
                                  style=style)
-            logger.info('## [create_supply_section] completed.')
+            logger.info('completed.')
             return table
         except Exception as e:
-            msg = f'## Failed to create_supply_section : {e}'
+            msg = f'Failed to create_supply_section : {e}'
             logger.error(msg)
             raise
 
             # 작성년월일, 공급대가 총액 섹션
 
     def create_upper_tot_price_section(self, created_at: str, tot_price: int, etc: str) -> Table:
-        # 가로로 최대 4칸만 필요
-        col_widths = [2 * inch, 0.4 * inch, 2.6 * inch, 2 * inch]
-        row_heights = [0.3 * inch] * 3
-        tot_price = PdfGenerator.format_currency(tot_price)
-        data = [["작성년월일", "공급대가 총액", "", "비고"],
-                [created_at, "￦", tot_price, etc],
-                ["위 금액을 영수(청구)함", "", "", ""]]
+        try:
+            # 가로로 최대 4칸만 필요
+            col_widths = [2 * inch, 0.4 * inch, 2.6 * inch, 2 * inch]
+            row_heights = [0.3 * inch] * 3
+            tot_price = PdfGenerator.format_currency(tot_price)
+            data = [["작성년월일", "공급대가 총액", "", "비고"],
+                    [created_at, "￦", tot_price, etc],
+                    ["위 금액을 영수(청구)함", "", "", ""]]
 
-        style = [
-            ("SPAN", (1, 0), (2, 0)),  # 공급대가 총액 셀병합
-            ("SPAN", (0, -1), (-1, -1)),  # 위 금액을 영수(청구)함 row 셀병합
-            ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
-            ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 12포인트
-            ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
-            ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
-            ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
-            ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
-            ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, -1), self.font_400),
-        ]
+            style = [
+                ("SPAN", (1, 0), (2, 0)),  # 공급대가 총액 셀병합
+                ("SPAN", (0, -1), (-1, -1)),  # 위 금액을 영수(청구)함 row 셀병합
+                ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
+                ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 12포인트
+                ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
+                ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
+                ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
+                ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTNAME', (0, 0), (-1, -1), self.font_400),
+            ]
 
-        table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
-        logger.info('## [create_upper_tot_price_section] completed.')
-        return table
+            table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # items 는 총 13개까지만 들어갈 수 있음(더 넣어야하면 pdf page break 필요)
     def create_items_section(self, items=List[PdfOrderItem]) -> Table:
-        total_row = 14  # 헤더 포함
-        max_row = total_row - 1  # 헤더 제외
+        try:
+            total_row = 14  # 헤더 포함
+            max_row = total_row - 1  # 헤더 제외
 
-        # 최대 4 column 이 필요
-        col_widths = [2.5 * inch, 1 * inch, 1.5 * inch, 2 * inch]
-        row_heights = [0.3 * inch] * total_row
+            # 최대 4 column 이 필요
+            col_widths = [2.5 * inch, 1 * inch, 1.5 * inch, 2 * inch]
+            row_heights = [0.3 * inch] * total_row
 
-        empty_row: List[str] = ["", "", "", ""]  # 아이템 항목 정보가 들어갈 빈 row 13개 필요(5배수 row 마다 아래 굵은 border 필요)
-        header = [["품목", "수량", "단가", "공급대가(금액)"]]
-        for i in range(0, max_row):
-            if i < len(items):
-                item: PdfOrderItem = items[i]
-                item_row = [item.name, item.quantity, item.unit_price, item.tot_price]
-                header.append(item_row)
-            else:
-                header.append(empty_row)
-        data = header
+            empty_row: List[str] = ["", "", "", ""]  # 아이템 항목 정보가 들어갈 빈 row 13개 필요(5배수 row 마다 아래 굵은 border 필요)
+            header = [["품목", "수량", "단가", "공급대가(금액)"]]
+            for i in range(0, max_row):
+                if i < len(items):
+                    item: PdfOrderItem = items[i]
+                    item_row = [item.name, item.quantity, item.unit_price, item.tot_price]
+                    header.append(item_row)
+                else:
+                    header.append(empty_row)
+            data = header
 
-        style = [
-            ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
-            ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 12포인트
-            ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
-            ('LINEBELOW', (0, 5), (-1, 5), 2, colors.black),
-            ('LINEBELOW', (0, 10), (-1, 10), 2, colors.black),
-            ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
-            ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
-            ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
-            ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, -1), self.font_400),
-        ]
+            style = [
+                ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
+                ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 12포인트
+                ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBELOW', (0, 5), (-1, 5), 2, colors.black),
+                ('LINEBELOW', (0, 10), (-1, 10), 2, colors.black),
+                ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
+                ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
+                ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
+                ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTNAME', (0, 0), (-1, -1), self.font_400),
+            ]
 
-        table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
-        logger.info('## [create_items_section] completed.')
-        return table
+            table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # prev_balance : 전잔액
     # balance : 잔액
     # deposit : 입금
     def create_footer(self, prev_balance: Union[int, None], tot_price: Union[int, None], deposit: Union[int, None],
                       balance: Union[int, None]) -> Table:
-        prev_balance = PdfGenerator.format_currency(prev_balance)
-        tot_price = PdfGenerator.format_currency(tot_price)
-        deposit = PdfGenerator.format_currency(deposit)
-        balance = PdfGenerator.format_currency(balance)
+        try:
+            prev_balance = PdfGenerator.format_currency(prev_balance)
+            tot_price = PdfGenerator.format_currency(tot_price)
+            deposit = PdfGenerator.format_currency(deposit)
+            balance = PdfGenerator.format_currency(balance)
 
-        # 최대 4 column 이 필요
-        col_widths = [1.5 * inch, 2 * inch, 1.5 * inch, 2 * inch]
-        row_heights = [0.3 * inch] * 2
+            # 최대 4 column 이 필요
+            col_widths = [1.5 * inch, 2 * inch, 1.5 * inch, 2 * inch]
+            row_heights = [0.3 * inch] * 2
 
-        data = [["전잔액", prev_balance, "합계", tot_price],
-                ["입금", deposit, "잔액", balance], ]
+            data = [["전잔액", prev_balance, "합계", tot_price],
+                    ["입금", deposit, "잔액", balance], ]
 
-        style = [
-            ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
-            ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 10포인트
-            ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
-            ('LINEBELOW', (0, -1), (-1, -1), 2, colors.black),
-            ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
-            ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
-            ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
-            ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, -1), self.font_400),
-        ]
+            style = [
+                ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 공급자 텍스트 수직 중앙배치
+                ('FONTSIZE', (0, 0), (-1, -1), 10),  # 전체 영역 10포인트
+                ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBELOW', (0, -1), (-1, -1), 2, colors.black),
+                ('LINEBEFORE', (0, 0), (0, -1), 2, colors.black),
+                ('LINEBEFORE', (1, 0), (0, -1), 1, colors.black),
+                ('LINEAFTER', (-1, 0), (-1, -1), 2, colors.black),
+                ('LINEAFTER', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTNAME', (0, 0), (-1, -1), self.font_400),
+            ]
 
-        table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
-        logger.info('## [create_footer] completed.')
-        return table
+            table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     def create_extra_footer(self, bank_account: str):
-        # 최대 4 column 이 필요
-        col_widths = [7 * inch]
-        row_heights = [0.4 * inch] * 1
+        try:
+            # 최대 4 column 이 필요
+            col_widths = [7 * inch]
+            row_heights = [0.4 * inch] * 1
 
-        data = [[bank_account]]
+            data = [[bank_account]]
 
-        style = [
-            ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 전체 텍스트 수직 중앙배치
-            ('FONTSIZE', (0, 0), (-1, -1), 14),
-            ('FONTNAME', (0, 0), (-1, -1), self.font_600),
-        ]
+            style = [
+                ('ALIGN', (0, 0), (-1, -1), "CENTER"),  # 전체 텍스트 중앙정렬
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 전체 텍스트 수직 중앙배치
+                ('FONTSIZE', (0, 0), (-1, -1), 14),
+                ('FONTNAME', (0, 0), (-1, -1), self.font_600),
+            ]
 
-        table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
-        logger.info('## [create_extra_footer] completed.')
-        return table
+            table: Table = Table(data, colWidths=col_widths, rowHeights=row_heights, style=style)
+            logger.info('completed.')
+            return table
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # 반환된 elements 배열의 4번째 index 에 items_sections 을 생성 후 넣어주면 됨
     def create_form_elements(self, order_no: str, receipt_owner: str, business_no: str, company_name: str,
@@ -285,25 +315,30 @@ class PdfGenerator:
                              prev_balance: Union[None, int],
                              deposit: Union[None, int],
                              balance: Union[None, int], bank_account: str):
-        title = "영수증"
-        created_at = PdfGenerator._get_today()
+        try:
+            title = "영수증"
+            created_at = PdfGenerator._get_today()
 
-        header = self.create_header(title=title)
-        sub_header = self.create_sub_header(order_no=order_no, name=receipt_owner)
-        supply_section = self.create_supply_section(business_no=business_no,
-                                                    company_name=company_name,
-                                                    name=employer_name,
-                                                    address=address,
-                                                    business_category=business_category,
-                                                    business_sub_category=business_sub_category,
-                                                    stamp_img_url=stamp_img_url)
-        upper_tot_price_section = self.create_upper_tot_price_section(created_at=created_at, tot_price=tot_price,
-                                                                      etc=etc)
-        footer = self.create_footer(prev_balance=prev_balance, deposit=deposit, tot_price=tot_price, balance=balance)
-        extra_footer = self.create_extra_footer(bank_account=bank_account)
+            header = self.create_header(title=title)
+            sub_header = self.create_sub_header(order_no=order_no, name=receipt_owner)
+            supply_section = self.create_supply_section(business_no=business_no,
+                                                        company_name=company_name,
+                                                        name=employer_name,
+                                                        address=address,
+                                                        business_category=business_category,
+                                                        business_sub_category=business_sub_category,
+                                                        stamp_img_url=stamp_img_url)
+            upper_tot_price_section = self.create_upper_tot_price_section(created_at=created_at, tot_price=tot_price,
+                                                                          etc=etc)
+            footer = self.create_footer(prev_balance=prev_balance, deposit=deposit, tot_price=tot_price,
+                                        balance=balance)
+            extra_footer = self.create_extra_footer(bank_account=bank_account)
 
-        # 4 index에 items_section element가 들어가면 됩니다.
-        return [header, sub_header, supply_section, upper_tot_price_section, footer, extra_footer]
+            # 4 index에 items_section element가 들어가면 됩니다.
+            return [header, sub_header, supply_section, upper_tot_price_section, footer, extra_footer]
+        except Exception as e:
+            logger.error(e)
+            raise
 
 # def _create_json_mock(num: int = 100) -> dict:
 #     today = datetime.now(timezone('Asia/Seoul'))

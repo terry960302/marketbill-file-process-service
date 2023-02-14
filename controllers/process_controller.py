@@ -1,27 +1,26 @@
 import json
 import os
-
 from fastapi import status
 from services.receipt_service import ReceiptService
 from models import receipt_process_input as dto, gateway_response as r
-import traceback
-import sys
+import inspect
 import logging
+from constants import strings
 
-# 로그 생성
-logger = logging.getLogger()
+# 로그
+logger = logging.getLogger("process_controller")
+logging.basicConfig(format=strings.LOGGER_FORMAT)
 logger.setLevel(logging.INFO)
 
 
 def handle_receipt_process(req_body) -> r.GatewayResponse:
+    func_name = inspect.stack()[0][3]
     try:
-        # TODO: 다시 주석풀고 속도 영향 안가게 잘 배치할 필요가 있음
-        # db = Datastore()
-        # db.set_postgres()
-        is_lambda_env = os.environ.get("LAMBDA_TASK_ROOT") is not None  # 람다 환경인지 로컬 환경인지에 따른 분기
+        is_lambda_env = os.environ.get(
+            "LAMBDA_TASK_ROOT") is not None  # 람다 환경인지 로컬 환경인지에 따른 분기(로컬에선 테스트용이성을 위해 fastApi 사용)
         json_dict = json.loads(req_body) if is_lambda_env else dict(req_body)
 
-        logger.info('## request body : \r' + json.dumps(json_dict))
+        # logger.info(f'${func_name} > request body : \r{json.dumps(json_dict)}')
 
         json_input = dto.ReceiptProcessInput(**json_dict)
         service = ReceiptService(json_input)
@@ -39,8 +38,6 @@ def handle_receipt_process(req_body) -> r.GatewayResponse:
     except Exception as e:
         msg = f'Failed handle_receipt_process : {e}'
         logger.error(msg)
-        # exc_info = sys.exc_info()
-        # ex = ''.join(traceback.format_exception(*exc_info))
         return r.GatewayResponse(
             statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
             body=r.ErrorBody(message=msg).to_str()

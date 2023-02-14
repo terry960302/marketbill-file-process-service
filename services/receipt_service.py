@@ -18,8 +18,12 @@ from PyPDF2 import PdfFileReader
 from utils.pdf_generator import PdfGenerator
 from reportlab.platypus import PageBreak
 import logging
+import inspect
+from constants import strings
 
-logger = logging.getLogger()
+# 로그
+logger = logging.getLogger("receipt_service")
+logging.basicConfig(format=strings.LOGGER_FORMAT)
 logger.setLevel(logging.INFO)
 
 
@@ -65,6 +69,7 @@ class ReceiptService:
         def is_non_empty_price(item: OrderItem):
             is_not_null_price = item.price is not None
             return is_not_null_price and item.price > 0
+
         return list(filter(is_non_empty_price, order_list))
 
     @staticmethod
@@ -78,107 +83,136 @@ class ReceiptService:
 
     @staticmethod
     def reformat_address(address: str, company_phone_no: str) -> str:
-        max_letters_per_line = 45
-        if len(address) <= max_letters_per_line:
-            address = f'{address}\n'
-        else:
-            address = address[:max_letters_per_line] \
-                      + "\n" \
-                      + address[max_letters_per_line:]
-        return f'{address} ☎ {company_phone_no}'
+        try:
+            max_letters_per_line = 45
+            if len(address) <= max_letters_per_line:
+                address = f'{address}\n'
+            else:
+                address = address[:max_letters_per_line] \
+                          + "\n" \
+                          + address[max_letters_per_line:]
+            logger.info('completed.')
+            return f'{address} ☎ {company_phone_no}'
+        except Exception as e:
+            logger.error(e)
+            raise
 
     @staticmethod
     def reformat_company_name(company_name: str) -> str:
-        max_letters_per_line = 15
-        if len(company_name) > max_letters_per_line:
-            company_name = company_name[:max_letters_per_line] \
-                           + "\n" \
-                           + company_name[max_letters_per_line:]
-        return company_name
+        try:
+            max_letters_per_line = 15
+            if len(company_name) > max_letters_per_line:
+                company_name = company_name[:max_letters_per_line] \
+                               + "\n" \
+                               + company_name[max_letters_per_line:]
+            logger.info('completed.')
+            return company_name
+        except Exception as e:
+            logger.error(e)
+            raise
 
     def process_receipt_pdf(self):
-        pdf_buffer = self.create_pdf_from_data()
-        logger.info("## 1. pdf 파일 생성 완료")
-        metadata = self.upload_receipt_to_s3(pdf_buffer)
-        logger.info("## 2. s3 업로드 완료")
-        output = self.create_output(metadata)
-        return output
+        try:
+            pdf_buffer = self.create_pdf_from_data()
+            logger.info("1. pdf 파일 생성 완료")
+            metadata = self.upload_receipt_to_s3(pdf_buffer)
+            logger.info("2. s3 업로드 완료")
+            output = self.create_output(metadata)
+            logger.info('completed.')
+            return output
+        except Exception as e:
+            logger.error(e)
+            raise
 
     def create_pdf_from_data(self):
-        pdf_generator = PdfGenerator(file_name=self.file_name)
+        try:
+            pdf_generator = PdfGenerator(file_name=self.file_name)
 
-        calc_prices = list(map(lambda item: item.price * item.quantity, self.order_items))
-        tot_price = sum(calc_prices)
-        items = list(
-            map(lambda item: PdfOrderItem(name=f'({item.flower.flowerType.name}){item.flower.name}-{item.grade}',
-                                          unit_price=item.price, quantity=item.quantity), self.order_items))
+            calc_prices = list(map(lambda item: item.price * item.quantity, self.order_items))
+            tot_price = sum(calc_prices)
+            items = list(
+                map(lambda item: PdfOrderItem(name=f'({item.flower.flowerType.name}){item.flower.name}-{item.grade}',
+                                              unit_price=item.price, quantity=item.quantity), self.order_items))
 
-        form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
-                                                           receipt_owner=self.retailer.name,
-                                                           business_no=self.wholesaler.businessNo,
-                                                           company_name=ReceiptService.reformat_company_name(
-                                                               self.wholesaler.companyName),
-                                                           employer_name=self.wholesaler.employerName,
-                                                           address=ReceiptService.reformat_address(
-                                                               self.wholesaler.address,
-                                                               self.wholesaler.companyPhoneNo),
-                                                           business_category=self.wholesaler.businessMainCategory,
-                                                           business_sub_category=self.wholesaler.businessSubCategory,
-                                                           stamp_img_url=self.wholesaler.sealStampImgUrl,
-                                                           tot_price=tot_price,
-                                                           etc="", prev_balance=None, deposit=None,
-                                                           balance=None, bank_account=self.wholesaler.bankAccount)
-        max_row = 13
-        items_section_idx = 4
-        page_num = ceil(len(items) / max_row)
-        elements = []
+            form_elements = pdf_generator.create_form_elements(order_no=self.order_no,
+                                                               receipt_owner=self.retailer.name,
+                                                               business_no=self.wholesaler.businessNo,
+                                                               company_name=ReceiptService.reformat_company_name(
+                                                                   self.wholesaler.companyName),
+                                                               employer_name=self.wholesaler.employerName,
+                                                               address=ReceiptService.reformat_address(
+                                                                   self.wholesaler.address,
+                                                                   self.wholesaler.companyPhoneNo),
+                                                               business_category=self.wholesaler.businessMainCategory,
+                                                               business_sub_category=self.wholesaler.businessSubCategory,
+                                                               stamp_img_url=self.wholesaler.sealStampImgUrl,
+                                                               tot_price=tot_price,
+                                                               etc="", prev_balance=None, deposit=None,
+                                                               balance=None, bank_account=self.wholesaler.bankAccount)
+            max_row = 13
+            items_section_idx = 4
+            page_num = ceil(len(items) / max_row)
+            elements = []
 
-        for i in range(page_num):
-            if i != 0:
-                elements.append(PageBreak())
-            elements.extend(form_elements)
-            partial_items = items[i * max_row: (i + 1) * max_row]
-            items_section = pdf_generator.create_items_section(items=partial_items)
-            elements.insert(items_section_idx + (i * 8), items_section)
-        pdf_generator.doc.build(elements)
-        return pdf_generator.buffer
+            for i in range(page_num):
+                if i != 0:
+                    elements.append(PageBreak())
+                elements.extend(form_elements)
+                partial_items = items[i * max_row: (i + 1) * max_row]
+                items_section = pdf_generator.create_items_section(items=partial_items)
+                elements.insert(items_section_idx + (i * 8), items_section)
+            pdf_generator.doc.build(elements)
+            logger.info('completed.')
+            return pdf_generator.buffer
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # common
     def upload_receipt_to_s3(self, buffer) -> str:
-        profile = self._get_profile()
-        object_name = f'{self.remote_storage_dir}/{profile}/{self.file_name}{self.pdf_format}'
+        try:
+            profile = self._get_profile()
+            object_name = f'{self.remote_storage_dir}/{profile}/{self.file_name}{self.pdf_format}'
 
-        pdf = PdfFileReader(buffer)
-        pdf_info = pdf.getDocumentInfo()
-        pdf_metadata = str(pdf_info)
+            pdf = PdfFileReader(buffer)
+            pdf_info = pdf.getDocumentInfo()
+            pdf_metadata = str(pdf_info)
 
-        s3_client: BaseClient = boto3.client(
-            self.remote_storage_type,
-            aws_access_key_id=ACCESS_KEY_ID,
-            aws_secret_access_key=ACCESS_SECRET_KEY
-        )
+            s3_client: BaseClient = boto3.client(
+                self.remote_storage_type,
+                aws_access_key_id=ACCESS_KEY_ID,
+                aws_secret_access_key=ACCESS_SECRET_KEY
+            )
 
-        # 파일을 다시 읽을 수 있도록 처음부터 읽게 설정
-        buffer.seek(0)
-        # 자동으로 Buffer가 close되므로 buffer.close() 가 필요없음
-        s3_client.upload_fileobj(
-            buffer,
-            BUCKET_NAME,
-            object_name)
-
-        return pdf_metadata
+            # 파일을 다시 읽을 수 있도록 처음부터 읽게 설정
+            buffer.seek(0)
+            # 자동으로 Buffer가 close되므로 buffer.close() 가 필요없음
+            s3_client.upload_fileobj(
+                buffer,
+                BUCKET_NAME,
+                object_name)
+            logger.info('completed.')
+            return pdf_metadata
+        except Exception as e:
+            logger.error(e)
+            raise
 
     # common
     def create_output(self, pdf_metadata: str) -> ReceiptProcessOutput:
         # [Warning] remote_dir 경로를 제외하고 요청을 보내야 CDN 을 통해 파일을 읽을 수 있습니다.(CDN 의 origin 소스 경로 설정으로 인해.)
-        profile = self._get_profile()
-        cached_file_path = f'{ReceiptService.REMOTE_CDN_URI_PREFIX}/{profile}/{self.file_name}{self.pdf_format}'
-        return ReceiptProcessOutput(
-            file_name=self.file_name,
-            file_format=self.pdf_format,
-            file_path=cached_file_path,
-            metadata=pdf_metadata
-        )
+        try:
+            profile = self._get_profile()
+            cached_file_path = f'{ReceiptService.REMOTE_CDN_URI_PREFIX}/{profile}/{self.file_name}{self.pdf_format}'
+            logger.info('completed.')
+            return ReceiptProcessOutput(
+                file_name=self.file_name,
+                file_format=self.pdf_format,
+                file_path=cached_file_path,
+                metadata=pdf_metadata
+            )
+        except Exception as e:
+            logger.error(e)
+            raise
 
 # def _create_json_mock(num: int = 100) -> dict:
 #     cur_time = datetime.now().strftime("%Y.%m.%d-%h:%m:%s")
